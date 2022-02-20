@@ -99,8 +99,8 @@ Thermometer::Thermometer(const roo_windows::Environment& env,
       indicator_(env, temp_gradient),
       caption_(env, "", font_NotoSans_Regular_27(), HAlign::Center(),
                VAlign::Top()) {
-  add(&indicator_);
-  add(&caption_);
+  add(indicator_);
+  add(caption_);
   indicator_.setEnabled(false);
   caption_.setVisible(false);
 }

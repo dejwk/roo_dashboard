@@ -87,9 +87,9 @@ VerticalBar::VerticalBar(const roo_windows::Environment& env, float scale,
       caption_(env, "", font_NotoSans_Regular_18(), HAlign::Left(),
                VAlign::Top()),
       caption_template_(caption_template) {
-  add(&title_);
-  add(&indicator_);
-  add(&caption_);
+  add(title_);
+  add(indicator_);
+  add(caption_);
 }
 
 void VerticalBar::setValue(float value) {
