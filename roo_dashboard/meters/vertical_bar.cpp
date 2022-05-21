@@ -102,7 +102,7 @@ void VerticalBar::setValue(float value) {
 }
 
 Dimensions VerticalBar::onMeasure(MeasureSpec width, MeasureSpec height) {
-  title_.measure(width, MeasureSpec::Unspecified(18));
+  Dimensions title = title_.measure(width, MeasureSpec::Unspecified(18));
   indicator_.measure(width, MeasureSpec::Unspecified(25));
   caption_.measure(MeasureSpec::Unspecified(0), MeasureSpec::Unspecified(0));
   std::string test_str = StringPrinter::sprintf(caption_template_.c_str(),
@@ -112,10 +112,10 @@ Dimensions VerticalBar::onMeasure(MeasureSpec width, MeasureSpec height) {
           .getHorizontalStringMetrics((const uint8_t*)test_str.c_str(),
                                       test_str.size())
           .width();
-
-  Dimensions preferred(preferred_width + indicator_.zero_offset(),
-                       title_.font().metrics().maxHeight() + 25 +
-                           caption_.font().metrics().maxHeight());
+  Dimensions preferred(
+      std::max(preferred_width, title.width()) + indicator_.zero_offset(),
+      title_.font().metrics().maxHeight() + 25 +
+          caption_.font().metrics().maxHeight());
   return Dimensions(width.resolveSize(preferred.width()),
                     height.resolveSize(preferred.height()));
 }

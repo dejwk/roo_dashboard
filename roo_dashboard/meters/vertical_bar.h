@@ -4,6 +4,7 @@
 #include <string>
 
 #include "roo_windows/core/panel.h"
+#include "roo_windows/core/preferred_size.h"
 #include "roo_windows/core/widget.h"
 #include "roo_windows/widgets/text_label.h"
 
@@ -30,6 +31,12 @@ class VerticalBar : public roo_windows::Panel {
       return roo_windows::Dimensions(50, 10);
     }
 
+    roo_windows::PreferredSize getPreferredSize() const override {
+      using roo_windows::PreferredSize;
+      return PreferredSize(PreferredSize::MatchParent(),
+                           PreferredSize::WrapContent());
+    }
+
     bool paint(const roo_display::Surface& s) override;
 
     void setValue(float value);
@@ -52,8 +59,8 @@ class VerticalBar : public roo_windows::Panel {
   VerticalBar(const roo_windows::Environment& env, float scale,
               int16_t zero_offset,
               std::function<roo_display::Color(float val)> color_fn,
-              const std::string& title,
-              const std::string& caption_template, float initial_value = 0.0);
+              const std::string& title, const std::string& caption_template,
+              float initial_value = 0.0);
 
   void setValue(float value);
 
