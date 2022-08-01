@@ -166,8 +166,7 @@ bool RadialGauge::paint(const Surface& s) {
         FilledCircle::ByRadius(spec_.x_center, spec_.y_center, 7, color::Red));
     if (face_ != nullptr) {
       dc.draw(*face_, spec_.x_center + spec_.face_x_offset,
-              spec_.y_center + spec_.face_y_offset, HAlign::Center(),
-              VAlign::Middle());
+              spec_.y_center + spec_.face_y_offset, kCenter | kMiddle);
     }
     dc.draw(base);
     Needle needle(Point{.x = spec_.x_center, .y = spec_.y_center},
@@ -203,11 +202,9 @@ bool RadialGauge::paint(const Surface& s) {
     if (face_ != nullptr) {
       DrawingContext dc(news);
       dc.draw(*face_, spec_.x_center + spec_.face_x_offset,
-              spec_.y_center + spec_.face_y_offset, HAlign::Center(),
-              VAlign::Middle());
+              spec_.y_center + spec_.face_y_offset, kCenter | kMiddle);
       mask_dc.draw(*face_, spec_.x_center + spec_.face_x_offset,
-                   spec_.y_center + spec_.face_y_offset, HAlign::Center(),
-                   VAlign::Middle());
+                   spec_.y_center + spec_.face_y_offset, kCenter | kMiddle);
     }
     news.drawObject(FilledRect(extents.xMin(), extents.yMin(), extents.xMax(),
                                extents.yMax(), s.bgcolor()));

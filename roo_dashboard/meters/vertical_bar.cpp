@@ -77,16 +77,13 @@ void VerticalBar::Indicator::setValue(float value) {
 VerticalBar::VerticalBar(const roo_windows::Environment& env, float scale,
                          int16_t zero_offset,
                          std::function<roo_display::Color(float val)> color_fn,
-                         const std::string& title,
-                         const std::string& caption_template,
+                         std::string title, std::string caption_template,
                          float initial_value)
     : Panel(env),
-      title_(env, title, font_NotoSans_Regular_12(), HAlign::Left(),
-             VAlign::Bottom()),
+      title_(env, std::move(title), font_NotoSans_Regular_12(), kLeft | kBottom),
       indicator_(env, scale, zero_offset, color_fn, initial_value),
-      caption_(env, "", font_NotoSans_Regular_18(), HAlign::Left(),
-               VAlign::Top()),
-      caption_template_(caption_template) {
+      caption_(env, "", font_NotoSans_Regular_18(), kLeft | kTop),
+      caption_template_(std::move(caption_template)) {
   add(title_);
   add(indicator_);
   add(caption_);
@@ -98,7 +95,7 @@ void VerticalBar::setValue(float value) {
   indicator_.setValue(value);
   caption_.setContent(
       StringPrinter::sprintf(caption_template_.c_str(), value_));
-  caption_.setVisible(!std::isnan(value_));
+  caption_.setVisibility(std::isnan(value_) ? GONE : VISIBLE);
 }
 
 Dimensions VerticalBar::onMeasure(MeasureSpec width, MeasureSpec height) {
@@ -108,10 +105,7 @@ Dimensions VerticalBar::onMeasure(MeasureSpec width, MeasureSpec height) {
   std::string test_str = StringPrinter::sprintf(caption_template_.c_str(),
                                                 (500.0 / indicator_.scale()));
   int16_t preferred_width =
-      caption_.font()
-          .getHorizontalStringMetrics((const uint8_t*)test_str.c_str(),
-                                      test_str.size())
-          .width();
+      caption_.font().getHorizontalStringMetrics(test_str).width();
   Dimensions preferred(
       std::max(preferred_width, title.width()) + indicator_.zero_offset(),
       title_.font().metrics().maxHeight() + 25 +

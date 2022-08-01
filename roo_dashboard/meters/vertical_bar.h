@@ -59,7 +59,7 @@ class VerticalBar : public roo_windows::Panel {
   VerticalBar(const roo_windows::Environment& env, float scale,
               int16_t zero_offset,
               std::function<roo_display::Color(float val)> color_fn,
-              const std::string& title, const std::string& caption_template,
+              std::string title, std::string caption_template,
               float initial_value = 0.0);
 
   void setValue(float value);

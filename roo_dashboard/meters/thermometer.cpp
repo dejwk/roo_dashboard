@@ -97,12 +97,11 @@ Thermometer::Thermometer(const roo_windows::Environment& env,
                          const roo_display::ColorGradient& temp_gradient)
     : roo_windows::Panel(env),
       indicator_(env, temp_gradient),
-      caption_(env, "", font_NotoSans_Regular_27(), HAlign::Center(),
-               VAlign::Top()) {
+      caption_(env, "", font_NotoSans_Regular_27(), kCenter | kTop) {
   add(indicator_);
   add(caption_);
   indicator_.setEnabled(false);
-  caption_.setVisible(false);
+  caption_.setVisibility(GONE);
 }
 
 void Thermometer::setTemperature(float tempC) {
@@ -110,7 +109,7 @@ void Thermometer::setTemperature(float tempC) {
   tempC_ = tempC;
   indicator_.setTemperature(tempC);
   caption_.setContent(StringPrinter::sprintf("%.1f°C", tempC_));
-  caption_.setVisible(!std::isnan(tempC_));
+  caption_.setVisibility(std::isnan(tempC_) ? GONE : VISIBLE);
 }
 
 Dimensions Thermometer::onMeasure(MeasureSpec width, MeasureSpec height) {
