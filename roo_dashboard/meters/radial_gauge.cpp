@@ -151,22 +151,24 @@ Dimensions RadialGauge::getSuggestedMinimumDimensions() const {
 bool RadialGauge::paint(const Surface& s) {
   GaugeBase base(spec_);
   if (isInvalidated()) {
-    s.drawObject(roo_display::Border(this->bounds(), base.extents(),
-                                     s.bgcolor()));
+    s.drawObject(
+        roo_display::Border(this->bounds(), base.extents(), s.bgcolor()));
   }
   Surface news(s);
   news.set_fill_mode(FILL_MODE_VISIBLE);
   news.clipToExtents(base.extents());
   if (news.clip_box().empty()) return true;
   int16_t needle_radius = spec_.radius - 2;
+  auto center =
+      kCenter.toLeft().shiftBy(spec_.x_center + spec_.face_x_offset) |
+      kMiddle.toTop().shiftBy(spec_.y_center + spec_.face_y_offset);
   if (isInvalidated()) {
     DrawingContext dc(news);
     dc.setWriteOnce();
     dc.draw(
         FilledCircle::ByRadius(spec_.x_center, spec_.y_center, 7, color::Red));
     if (face_ != nullptr) {
-      dc.draw(*face_, spec_.x_center + spec_.face_x_offset,
-              spec_.y_center + spec_.face_y_offset, kCenter | kMiddle);
+      dc.draw(*face_, center);
     }
     dc.draw(base);
     Needle needle(Point{.x = spec_.x_center, .y = spec_.y_center},
@@ -201,10 +203,8 @@ bool RadialGauge::paint(const Surface& s) {
     news.set_out(&filter);
     if (face_ != nullptr) {
       DrawingContext dc(news);
-      dc.draw(*face_, spec_.x_center + spec_.face_x_offset,
-              spec_.y_center + spec_.face_y_offset, kCenter | kMiddle);
-      mask_dc.draw(*face_, spec_.x_center + spec_.face_x_offset,
-                   spec_.y_center + spec_.face_y_offset, kCenter | kMiddle);
+      dc.draw(*face_, center);
+      mask_dc.draw(*face_, center);
     }
     news.drawObject(FilledRect(extents.xMin(), extents.yMin(), extents.xMax(),
                                extents.yMax(), s.bgcolor()));
