@@ -44,10 +44,10 @@ void Thermometer::Indicator::setTemperature(float tempC) {
   }
 }
 
-bool Thermometer::Indicator::paint(const Surface& s) {
+void Thermometer::Indicator::paint(const Canvas& canvas) const {
   // For now, we use a fixed range.
   if (isInvalidated()) {
-    s.drawObject(thermometer_246x80_bounds());
+    canvas.drawObject(thermometer_246x80_bounds());
     // Draw ticks.
     for (int i = 0; i < 33; i++) {
       int y = (i * 5 + 15);
@@ -60,34 +60,28 @@ bool Thermometer::Indicator::paint(const Surface& s) {
       } else if ((i - 4) % 2 == 0) {
         width = 5;
       }
-      s.drawObject(FilledRect(46, y, 46 + width - 1, y, color::Black));
-      s.drawObject(
-          FilledRect(46, y + 1, 46 + width - 1, y + 1, color::LightGray));
+      canvas.fillRect(46, y, 46 + width - 1, y, color::Black);
+      canvas.fillRect(46, y + 1, 46 + width - 1, y + 1, color::LightGray);
     }
   }
 
-  Surface news = s;
-  news.set_dx(s.dx() + 10);
-  news.set_dy(s.dy() + 10);
-  news.set_fill_mode(roo_display::FILL_MODE_VISIBLE);
+  Canvas my_canvas = canvas;
+  my_canvas.shift(10, 10);
+  roo_display::DrawingContext dc(my_canvas);
+  dc.setFillMode(roo_display::FILL_MODE_VISIBLE);
 
   typedef RleImage4bppxPolarized<Alpha4, PrgMemResource> Img;
   const Img& img = thermometer_246x80_bar();
   Img top(img.extents(), img.resource(), Alpha4(theme().color.background));
   Img bottom(img.extents(), img.resource(), Alpha4(temp_color_));
 
-  Box clip = news.clip_box();
+  // Box clip = news.clip_box();
 
-  news.set_clip_box(Box::intersect(
-      clip,
-      Box(0, 0, 57, temp_height_pixels_ - 1).translate(news.dx(), news.dy())));
-  news.drawObject(top);
+  dc.setClipBox(Box(0, 0, 57, temp_height_pixels_ - 1));
+  dc.draw(top);
 
-  news.set_clip_box(Box::intersect(
-      clip,
-      Box(0, temp_height_pixels_, 57, 500).translate(news.dx(), news.dy())));
-  news.drawObject(bottom);
-  return true;
+  dc.setClipBox(Box(0, temp_height_pixels_, 57, 500));
+  dc.draw(bottom);
 }
 
 Thermometer::Thermometer(const roo_windows::Environment& env)
@@ -101,6 +95,7 @@ Thermometer::Thermometer(const roo_windows::Environment& env,
   add(indicator_);
   add(caption_);
   indicator_.setEnabled(false);
+  caption_.setPadding(roo_windows::PADDING_NONE);
   caption_.setVisibility(GONE);
 }
 
@@ -112,22 +107,21 @@ void Thermometer::setTemperature(float tempC) {
   caption_.setVisibility(std::isnan(tempC_) ? GONE : VISIBLE);
 }
 
-Dimensions Thermometer::onMeasure(MeasureSpec width, MeasureSpec height) {
-  indicator_.measure(MeasureSpec::Unspecified(58),
-                     MeasureSpec::Unspecified(232));
-  caption_.measure(MeasureSpec::Unspecified(98), MeasureSpec::Unspecified(40));
+Dimensions Thermometer::onMeasure(WidthSpec width, HeightSpec height) {
+  indicator_.measure(WidthSpec::Unspecified(58), HeightSpec::Unspecified(232));
+  caption_.measure(WidthSpec::Unspecified(98), HeightSpec::Unspecified(40));
   Dimensions preferred(98, 280);
   return Dimensions(width.resolveSize(preferred.width()),
                     height.resolveSize(preferred.height()));
 }
 
-void Thermometer::onLayout(bool changed, const roo_display::Box& box) {
+void Thermometer::onLayout(bool changed, const roo_windows::Rect& rect) {
   // Pic's dimensions are 58x232. Center it horizontally, and align to top.
-  int16_t xMinPic = (box.width() - 58) / 2;
-  indicator_.layout(Box(xMinPic, 0, xMinPic + 57, 231));
+  XDim xMinPic = (rect.width() - 58) / 2;
+  indicator_.layout(roo_windows::Rect(xMinPic, 0, xMinPic + 57, 231));
   // We need 98x40 for the label.
-  int16_t xMinLabel = (box.width() - 98) / 2;
-  caption_.layout(Box(xMinLabel, 240, xMinLabel + 98, 279));
+  XDim xMinLabel = (rect.width() - 98) / 2;
+  caption_.layout(roo_windows::Rect(xMinLabel, 240, xMinLabel + 98, 279));
 }
 
 }  // namespace roo_dashboard

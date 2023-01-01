@@ -26,7 +26,7 @@ class Thermometer : public roo_windows::Panel {
       return roo_windows::Dimensions(56, 232);
     }
 
-    bool paint(const roo_display::Surface& s) override;
+    void paint(const roo_windows::Canvas& canvas) const override;
 
     void setTemperature(float tempC);
 
@@ -43,10 +43,10 @@ class Thermometer : public roo_windows::Panel {
 
   void setTemperature(float tempC);
 
-  roo_windows::Dimensions onMeasure(roo_windows::MeasureSpec width,
-                                    roo_windows::MeasureSpec height) override;
+  roo_windows::Dimensions onMeasure(roo_windows::WidthSpec width,
+                                    roo_windows::HeightSpec height) override;
 
-  void onLayout(bool changed, const roo_display::Box& box) override;
+  void onLayout(bool changed, const roo_windows::Rect& rect) override;
 
  private:
   Indicator indicator_;

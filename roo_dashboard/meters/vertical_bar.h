@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 
+#include "roo_windows/core/canvas.h"
 #include "roo_windows/core/panel.h"
 #include "roo_windows/core/preferred_size.h"
 #include "roo_windows/core/widget.h"
@@ -33,11 +34,13 @@ class VerticalBar : public roo_windows::Panel {
 
     roo_windows::PreferredSize getPreferredSize() const override {
       using roo_windows::PreferredSize;
-      return PreferredSize(PreferredSize::MatchParent(),
-                           PreferredSize::WrapContent());
+      return PreferredSize(PreferredSize::MatchParentWidth(),
+                           PreferredSize::WrapContentHeight());
     }
 
-    bool paint(const roo_display::Surface& s) override;
+    void paintWidgetContents(const roo_windows::Canvas& canvas,
+                             roo_windows::Clipper& clipper) override;
+    void paint(const roo_windows::Canvas& canvas) const override;
 
     void setValue(float value);
 
@@ -64,10 +67,10 @@ class VerticalBar : public roo_windows::Panel {
 
   void setValue(float value);
 
-  roo_windows::Dimensions onMeasure(roo_windows::MeasureSpec width,
-                                    roo_windows::MeasureSpec height) override;
+  roo_windows::Dimensions onMeasure(roo_windows::WidthSpec width,
+                                    roo_windows::HeightSpec height) override;
 
-  void onLayout(bool changed, const roo_display::Box& box) override;
+  void onLayout(bool changed, const roo_windows::Rect& rect) override;
 
  private:
   roo_windows::TextLabel title_;

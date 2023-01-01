@@ -37,31 +37,31 @@ const Point polarToCart(float deg, float radius, Point center) {
 
 class GaugeBase : public Drawable {
  public:
-  GaugeBase(RadialGauge::Spec& spec) : spec_(spec) {}
+  GaugeBase(const RadialGauge::Spec* spec) : spec_(spec) {}
 
-  Box extents() const override { return spec_.extents; }
+  Box extents() const override { return spec_->extents; }
 
  private:
   void drawTo(const Surface& s) const override {
-    float scale = spec_.deg_scale_end - spec_.deg_scale_start;
-    float len = scale * (2 * kPi * spec_.radius + spec_.scale_width) / 360.0;
+    float scale = spec_->deg_scale_end - spec_->deg_scale_start;
+    float len = scale * (2 * kPi * spec_->radius + spec_->scale_width) / 360.0;
     int dividers = (int)(len / 3);
-    float deg = spec_.deg_scale_start;
-    Point center = {.x = spec_.x_center, .y = spec_.y_center};
+    float deg = spec_->deg_scale_start;
+    Point center = {.x = spec_->x_center, .y = spec_->y_center};
 
     float first_divider =
-        (int)(spec_.min_scale_value /
-              (spec_.divider_spacing / spec_.ticks_per_divider)) *
-        (spec_.divider_spacing / spec_.ticks_per_divider);
-    int idx = (int)(spec_.min_scale_value /
-                    (spec_.divider_spacing / spec_.ticks_per_divider)) %
-              spec_.ticks_per_divider;
+        (int)(spec_->min_scale_value /
+              (spec_->divider_spacing / spec_->ticks_per_divider)) *
+        (spec_->divider_spacing / spec_->ticks_per_divider);
+    int idx = (int)(spec_->min_scale_value /
+                    (spec_->divider_spacing / spec_->ticks_per_divider)) %
+              spec_->ticks_per_divider;
     float divider = first_divider;
-    while (divider <= spec_.max_scale_value) {
-      float deg = divider / (spec_.max_scale_value - spec_.min_scale_value) *
-                      (spec_.deg_scale_end - spec_.deg_scale_start) +
-                  spec_.deg_scale_start;
-      int out_radius = spec_.radius + spec_.scale_width;
+    while (divider <= spec_->max_scale_value) {
+      float deg = divider / (spec_->max_scale_value - spec_->min_scale_value) *
+                      (spec_->deg_scale_end - spec_->deg_scale_start) +
+                  spec_->deg_scale_start;
+      int out_radius = spec_->radius + spec_->scale_width;
       if (idx == 0) {
         out_radius += 5;
         const Font& font = font_NotoSans_Condensed_15();
@@ -75,29 +75,29 @@ class GaugeBase : public Drawable {
         out_radius -= 5;
       }
       Point p0 = polarToCart(deg, out_radius, center);
-      Point p1 = polarToCart(deg, spec_.radius, center);
+      Point p1 = polarToCart(deg, spec_->radius, center);
       s.drawObject(Line(p0.x, p0.y, p1.x, p1.y, color::Black));
-      divider += (spec_.divider_spacing / spec_.ticks_per_divider);
+      divider += (spec_->divider_spacing / spec_->ticks_per_divider);
       idx++;
-      if (idx >= spec_.ticks_per_divider) idx = 0;
+      if (idx >= spec_->ticks_per_divider) idx = 0;
     }
 
-    Point p0 = polarToCart(deg, spec_.radius + spec_.scale_width, center);
-    Point p1 = polarToCart(deg, spec_.radius, center);
-    float value = spec_.min_scale_value;
+    Point p0 = polarToCart(deg, spec_->radius + spec_->scale_width, center);
+    Point p1 = polarToCart(deg, spec_->radius, center);
+    float value = spec_->min_scale_value;
     for (int i = 1; i <= dividers; ++i) {
-      float new_deg = spec_.deg_scale_start + (scale * i) / dividers;
+      float new_deg = spec_->deg_scale_start + (scale * i) / dividers;
       Point new_p0 =
-          polarToCart(new_deg, spec_.radius + spec_.scale_width, center);
-      Point new_p1 = polarToCart(new_deg, spec_.radius, center);
+          polarToCart(new_deg, spec_->radius + spec_->scale_width, center);
+      Point new_p1 = polarToCart(new_deg, spec_->radius, center);
       float new_value =
-          spec_.min_scale_value +
-          (i * (spec_.max_scale_value - spec_.min_scale_value) / dividers);
+          spec_->min_scale_value +
+          (i * (spec_->max_scale_value - spec_->min_scale_value) / dividers);
       s.drawObject(Line(p1.x, p1.y, new_p1.x, new_p1.y, color::Black));
       s.drawObject(FilledTriangle(p0.x, p0.y, p1.x, p1.y, new_p0.x, new_p0.y,
-                                  spec_.scale_color(value)));
+                                  spec_->scale_color(value)));
       s.drawObject(FilledTriangle(new_p1.x, new_p1.y, p1.x, p1.y, new_p0.x,
-                                  new_p0.y, spec_.scale_color(value)));
+                                  new_p0.y, spec_->scale_color(value)));
       p0 = new_p0;
       p1 = new_p1;
       deg = new_deg;
@@ -105,7 +105,7 @@ class GaugeBase : public Drawable {
     }
   }
 
-  RadialGauge::Spec& spec_;
+  const RadialGauge::Spec* spec_;
 };
 
 class Needle : public Drawable {
@@ -148,22 +148,28 @@ Dimensions RadialGauge::getSuggestedMinimumDimensions() const {
                     (spec_.radius + spec_.scale_width) * 2);
 }
 
-bool RadialGauge::paint(const Surface& s) {
-  GaugeBase base(spec_);
+void RadialGauge::paintWidgetContents(const Canvas& canvas,
+                                      Clipper& clipper) {
+  Widget::paintWidgetContents(canvas, clipper);
+  previous_value_ = current_value_;
+}
+
+void RadialGauge::paint(const Canvas& canvas) const {
+  GaugeBase base(&spec_);
   if (isInvalidated()) {
-    s.drawObject(
-        roo_display::Border(this->bounds(), base.extents(), s.bgcolor()));
+    canvas.drawObject(roo_display::Border(this->bounds().asBox(),
+                                          base.extents(), canvas.bgcolor()));
   }
-  Surface news(s);
-  news.set_fill_mode(FILL_MODE_VISIBLE);
-  news.clipToExtents(base.extents());
-  if (news.clip_box().empty()) return true;
+  Canvas my_canvas(canvas);
+  // news.set_fill_mode(FILL_MODE_VISIBLE);
+  my_canvas.clipToExtents(base.extents());
+  if (my_canvas.clip_box().empty()) return;
   int16_t needle_radius = spec_.radius - 2;
-  auto center =
-      kCenter.toLeft().shiftBy(spec_.x_center + spec_.face_x_offset) |
-      kMiddle.toTop().shiftBy(spec_.y_center + spec_.face_y_offset);
+  auto center = kCenter.toLeft().shiftBy(spec_.x_center + spec_.face_x_offset) |
+                kMiddle.toTop().shiftBy(spec_.y_center + spec_.face_y_offset);
   if (isInvalidated()) {
-    DrawingContext dc(news);
+    DrawingContext dc(my_canvas);
+    dc.setFillMode(roo_display::FILL_MODE_VISIBLE);
     dc.setWriteOnce();
     dc.draw(
         FilledCircle::ByRadius(spec_.x_center, spec_.y_center, 7, color::Red));
@@ -175,13 +181,13 @@ bool RadialGauge::paint(const Surface& s) {
                   needle_radius, needle_radius - 8, currentDeg(), color::Red);
     dc.draw(needle);
   } else {
-    if (previous_value_ == current_value_) return true;
+    if (previous_value_ == current_value_) return;
     Needle old_needle(Point{.x = spec_.x_center, .y = spec_.y_center},
                       needle_radius, needle_radius - 8, previousDeg(),
                       color::Red);
     Needle needle(Point{.x = spec_.x_center, .y = spec_.y_center},
                   needle_radius, needle_radius - 8, currentDeg(), color::Red);
-    news.drawObject(needle);
+    my_canvas.drawObject(needle);
 
     Box extents = old_needle.extents();
     roo_display::BitMaskOffscreen bitmask(extents, color::Black);
@@ -198,19 +204,16 @@ bool RadialGauge::paint(const Surface& s) {
     // Now, the clip mask passes the pixels of the old needle that are not
     // obstructed by the new needle.
     ClipMask mask(bitmask.buffer(),
-                  bitmask.extents().translate(news.dx(), news.dy()));
-    ClipMaskFilter filter(s.out(), &mask);
-    news.set_out(&filter);
+                  bitmask.extents().translate(my_canvas.dx(), my_canvas.dy()));
+    ClipMaskFilter filter(canvas.out(), &mask);
+    my_canvas.set_out(&filter);
     if (face_ != nullptr) {
-      DrawingContext dc(news);
+      DrawingContext dc(my_canvas);
       dc.draw(*face_, center);
       mask_dc.draw(*face_, center);
     }
-    news.drawObject(FilledRect(extents.xMin(), extents.yMin(), extents.xMax(),
-                               extents.yMax(), s.bgcolor()));
+    my_canvas.clearRect(extents);
   }
-  previous_value_ = current_value_;
-  return true;
 }
 
 void RadialGauge::setValue(float value) {
