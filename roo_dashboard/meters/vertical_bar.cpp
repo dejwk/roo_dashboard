@@ -43,8 +43,8 @@ void VerticalBar::Indicator::paint(const Canvas& canvas) const {
   Canvas my_canvas = canvas;
   my_canvas.clipToExtents(clip_box);
   if (!my_canvas.clip_box().empty()) {
-    Color bar_color = alphaBlend(background(), color_);
-    Color zero_color = alphaBlend(background(), theme().color.onSurface);
+    Color bar_color = AlphaBlend(background(), color_);
+    Color zero_color = AlphaBlend(background(), theme().color.onSurface);
     my_canvas.clearRect(0, 0, std::min(value_, zero_offset_) - 1, height() - 1);
     if (value_ < zero_offset_) {
       my_canvas.fillRect(value_, 0, zero_offset_ - 1, height() - 1, bar_color);
@@ -132,7 +132,7 @@ void VerticalBar::onLayout(bool changed, const roo_windows::Rect& rect) {
       roo_windows::Rect(0, y_min, rect.width() - 1, y_min + bar_height - 1));
   y_min += bar_height;
   caption_.layout(roo_windows::Rect(indicator_.zero_offset(), y_min,
-                                    rect.xMax() - 1, rect.yMax() - 1));
+                                    rect.width() - 1, rect.height() - 1));
 }
 
 }  // namespace roo_dashboard

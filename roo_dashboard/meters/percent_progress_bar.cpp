@@ -95,20 +95,20 @@ void BaseProgressBar::paintWidgetContents(const Canvas& canvas,
   }
   Canvas my_canvas(canvas);
   if (progress_ == 0) {
-    my_canvas.set_bgcolor(alphaBlend(canvas.bgcolor(), incomplete_));
+    my_canvas.set_bgcolor(AlphaBlend(canvas.bgcolor(), incomplete_));
     Panel::paintWidgetContents(my_canvas, clipper);
     return;
   }
   if (progress_ == 1024) {
-    my_canvas.set_bgcolor(alphaBlend(canvas.bgcolor(), complete_));
+    my_canvas.set_bgcolor(AlphaBlend(canvas.bgcolor(), complete_));
     Panel::paintWidgetContents(my_canvas, clipper);
     return;
   }
 
   BarRaster bar(Box(canvas.dx(), canvas.dy(), width() + canvas.dx() - 1,
                     height() + canvas.dy() - 1),
-                alphaBlend(canvas.bgcolor(), complete_),
-                alphaBlend(canvas.bgcolor(), incomplete_),
+                AlphaBlend(canvas.bgcolor(), complete_),
+                AlphaBlend(canvas.bgcolor(), incomplete_),
                 (uint32_t)progress_ * width() / 1024 + canvas.dx());
   BackgroundFilter filter(my_canvas.out(), &bar);
   my_canvas.set_out(&filter);
@@ -118,7 +118,7 @@ void BaseProgressBar::paintWidgetContents(const Canvas& canvas,
 
 PercentProgressBar::PercentProgressBar(const roo_windows::Environment& env)
     : BaseProgressBar(env),
-      percent_(env, "0%%", *env.theme().font.button, kMiddle | kCenter) {
+      percent_(env, "0%", *env.theme().font.button, kMiddle | kCenter) {
   setGravity(Gravity(kHorizontalGravityCenter, kVerticalGravityMiddle));
   percent_.setPadding(PADDING_NONE);
   percent_.setMargins(MARGIN_NONE);
