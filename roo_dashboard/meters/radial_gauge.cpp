@@ -65,8 +65,7 @@ class GaugeBase : public Drawable {
       if (idx == 0) {
         out_radius += 5;
         const Font& font = font_NotoSans_Condensed_15();
-        TextLabel label(font, StringPrinter::sprintf("%2.f", divider),
-                        color::Black);
+        TextLabel label(StringPrintf("%2.f", divider), font, color::Black);
         Point label_pos =
             polarToCart(deg, out_radius + font.metrics().ascent(), center);
         s.drawObject(label, label_pos.x - label.metrics().width() / 2,
@@ -148,8 +147,7 @@ Dimensions RadialGauge::getSuggestedMinimumDimensions() const {
                     (spec_.radius + spec_.scale_width) * 2);
 }
 
-void RadialGauge::paintWidgetContents(const Canvas& canvas,
-                                      Clipper& clipper) {
+void RadialGauge::paintWidgetContents(const Canvas& canvas, Clipper& clipper) {
   Widget::paintWidgetContents(canvas, clipper);
   previous_value_ = current_value_;
 }

@@ -126,8 +126,8 @@ static const uint8_t thermometer_246x80_bounds_data[] PROGMEM = {
   0x46, 0x99, 0xBB, 0xA9, 0x74, 0x27, 0x77, 0x20,
 };
 
-const RleImage4bppxPolarized<Alpha4, PrgMemResource>& thermometer_246x80_bounds() {
-  static RleImage4bppxPolarized<Alpha4, PrgMemResource> value(
+const RleImage4bppxBiased<Alpha4, ProgMemPtr>& thermometer_246x80_bounds() {
+  static RleImage4bppxBiased<Alpha4, ProgMemPtr> value(
       58, 232, thermometer_246x80_bounds_data, Alpha4(color::Black));
   return value;
 }

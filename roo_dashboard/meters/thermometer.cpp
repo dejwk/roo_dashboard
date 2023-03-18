@@ -70,7 +70,7 @@ void Thermometer::Indicator::paint(const Canvas& canvas) const {
   roo_display::DrawingContext dc(my_canvas);
   dc.setFillMode(roo_display::FILL_MODE_VISIBLE);
 
-  typedef RleImage4bppxPolarized<Alpha4, PrgMemResource> Img;
+  typedef RleImage4bppxBiased<Alpha4, ProgMemPtr> Img;
   const Img& img = thermometer_246x80_bar();
   Img top(img.extents(), img.resource(), Alpha4(theme().color.background));
   Img bottom(img.extents(), img.resource(), Alpha4(temp_color_));
@@ -103,7 +103,7 @@ void Thermometer::setTemperature(float tempC) {
   if (tempC_ == tempC || (std::isnan(tempC_) && std::isnan(tempC))) return;
   tempC_ = tempC;
   indicator_.setTemperature(tempC);
-  caption_.setContent(StringPrinter::sprintf("%.1f°C", tempC_));
+  caption_.setTextf("%.1f°C", tempC_);
   caption_.setVisibility(std::isnan(tempC_) ? GONE : VISIBLE);
 }
 

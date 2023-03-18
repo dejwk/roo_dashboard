@@ -99,8 +99,8 @@ void VerticalBar::setValue(float value) {
   if (value_ == value || (std::isnan(value_) && std::isnan(value))) return;
   value_ = value;
   indicator_.setValue(value);
-  caption_.setContent(
-      StringPrinter::sprintf(caption_template_.c_str(), value_));
+  caption_.setText(
+      StringPrintf(caption_template_.c_str(), value_));
   caption_.setVisibility(std::isnan(value_) ? GONE : VISIBLE);
 }
 
@@ -108,8 +108,8 @@ Dimensions VerticalBar::onMeasure(WidthSpec width, HeightSpec height) {
   Dimensions title = title_.measure(width, HeightSpec::Unspecified(18));
   indicator_.measure(width, HeightSpec::Unspecified(25));
   caption_.measure(WidthSpec::Unspecified(0), HeightSpec::Unspecified(0));
-  std::string test_str = StringPrinter::sprintf(caption_template_.c_str(),
-                                                (500.0 / indicator_.scale()));
+  std::string test_str =
+      StringPrintf(caption_template_.c_str(), (500.0 / indicator_.scale()));
   int16_t preferred_width =
       caption_.font().getHorizontalStringMetrics(test_str).width();
   Dimensions preferred(

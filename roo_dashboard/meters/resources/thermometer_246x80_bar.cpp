@@ -74,8 +74,8 @@ static const uint8_t thermometer_246x80_bar_data[] PROGMEM = {
   0x77,
 };
 
-const RleImage4bppxPolarized<Alpha4, PrgMemResource>& thermometer_246x80_bar() {
-  static RleImage4bppxPolarized<Alpha4, PrgMemResource> value(
+const RleImage4bppxBiased<Alpha4, ProgMemPtr>& thermometer_246x80_bar() {
+  static RleImage4bppxBiased<Alpha4, ProgMemPtr> value(
       38, 212, thermometer_246x80_bar_data, Alpha4(color::Black));
   return value;
 }
