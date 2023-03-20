@@ -25,14 +25,14 @@ class BarRaster : public roo_display::Rasterizable {
         incomplete_(incomplete),
         threshold_(threshold) {}
 
-  void ReadColors(const int16_t* x, const int16_t* y, uint32_t count,
+  void readColors(const int16_t* x, const int16_t* y, uint32_t count,
                   Color* result) const override {
     while (count-- > 0) {
       *result++ = *x++ < threshold_ ? complete_ : incomplete_;
     }
   }
 
-  bool ReadColorRect(int16_t xMin, int16_t yMin, int16_t xMax, int16_t yMax,
+  bool readColorRect(int16_t xMin, int16_t yMin, int16_t xMax, int16_t yMax,
                      Color* result) const override {
     if (xMin >= extents_.xMin() && xMax <= extents_.xMax() &&
         yMin >= extents_.yMin() && yMax <= extents_.yMax()) {
@@ -46,7 +46,7 @@ class BarRaster : public roo_display::Rasterizable {
       }
     }
     // Fall back to the slow path.
-    return Rasterizable::ReadColorRect(xMin, yMin, xMax, yMax, result);
+    return Rasterizable::readColorRect(xMin, yMin, xMax, yMax, result);
   }
 
   roo_display::Box extents() const override { return extents_; }
