@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "roo_display/core/color.h"
+#include "roo_display/color/color.h"
 #include "roo_display/core/rasterizable.h"
 #include "roo_display/filter/background.h"
 #include "roo_windows/core/theme.h"

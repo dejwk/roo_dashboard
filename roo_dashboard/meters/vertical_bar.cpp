@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "roo_display/core/color.h"
+#include "roo_display/color/color.h"
 #include "roo_display/ui/string_printer.h"
 #include "roo_smooth_fonts/NotoSans_Regular/12.h"
 #include "roo_smooth_fonts/NotoSans_Regular/18.h"
