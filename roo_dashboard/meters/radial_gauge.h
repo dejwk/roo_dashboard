@@ -3,7 +3,7 @@
 #include "roo_display.h"
 #include "roo_display/core/offscreen.h"
 #include "roo_display/font/font.h"
-#include "roo_display/shape/basic_shapes.h"
+#include "roo_display/shape/basic.h"
 #include "roo_display/ui/color_gradient.h"
 #include "roo_display/ui/string_printer.h"
 #include "roo_display/ui/text_label.h"
