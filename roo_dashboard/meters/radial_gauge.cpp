@@ -7,6 +7,7 @@
 #include "roo_display/filter/front_to_back_writer.h"
 #include "roo_display/font/font.h"
 #include "roo_display/shape/basic.h"
+#include "roo_display/shape/smooth.h"
 #include "roo_display/ui/color_gradient.h"
 #include "roo_display/ui/string_printer.h"
 #include "roo_display/ui/text_label.h"
@@ -33,6 +34,12 @@ const Point polarToCart(float deg, float radius, Point center) {
                      std::roundf(sin(deg * 2 * kPi / 360.0) * radius)),
       .y = (int16_t)(center.y +
                      std::roundf(-cos(deg * 2 * kPi / 360.0) * radius))};
+}
+
+const FpPoint polarToCartFp(float deg, float radius, FpPoint center) {
+  return FpPoint{
+      .x = center.x + sinf(deg * 2 * kPi / 360.0) * radius,
+      .y = center.y - cosf(deg * 2 * kPi / 360.0) * radius};
 }
 
 class GaugeBase : public Drawable {
@@ -111,32 +118,21 @@ class Needle : public Drawable {
  public:
   Needle(Point center, int16_t full_radius, int16_t thick_radius, float deg,
          Color color)
-      : p0_(polarToCart(deg - 90, 2.5, center)),
-        p1_(polarToCart(deg - 1, thick_radius, center)),
-        p2_(polarToCart(deg, full_radius, center)),
-        p3_(polarToCart(deg + 1, thick_radius, center)),
-        p4_(polarToCart(deg + 90, 2.5, center)),
+      : center_{center.x, center.y},
+        tip_(polarToCartFp(deg, full_radius - 1, center_)),
         color_(color) {}
 
   Box extents() const {
-    return Box(p0_.x, p0_.y, p0_.x, p0_.y)
-        .extend(p1_.x, p1_.y)
-        .extend(p2_.x, p2_.y)
-        .extend(p3_.x, p3_.y)
-        .extend(p4_.x, p4_.y);
+    return SmoothWedgedLine(center_, 15, tip_, 2, color_).extents();
   }
 
  private:
   void drawTo(const Surface& s) const override {
-    s.drawObject(
-        FilledTriangle(p0_.x, p0_.y, p1_.x, p1_.y, p4_.x, p4_.y, color_));
-    s.drawObject(
-        FilledTriangle(p3_.x, p3_.y, p1_.x, p1_.y, p4_.x, p4_.y, color_));
-    s.drawObject(
-        FilledTriangle(p3_.x, p3_.y, p1_.x, p1_.y, p2_.x, p2_.y, color_));
+    s.drawObject(SmoothWedgedLine(center_, 15, tip_, 2, color_));
   }
 
   Point p0_, p1_, p2_, p3_, p4_;
+  FpPoint center_, tip_;
   Color color_;
 };
 
@@ -159,7 +155,6 @@ void RadialGauge::paint(const Canvas& canvas) const {
                                           base.extents(), canvas.bgcolor()));
   }
   Canvas my_canvas(canvas);
-  // news.set_fill_mode(FILL_MODE_VISIBLE);
   my_canvas.clipToExtents(base.extents());
   if (my_canvas.clip_box().empty()) return;
   int16_t needle_radius = spec_.radius - 2;
@@ -185,13 +180,16 @@ void RadialGauge::paint(const Canvas& canvas) const {
                       color::Red);
     Needle needle(Point{.x = spec_.x_center, .y = spec_.y_center},
                   needle_radius, needle_radius - 8, currentDeg(), color::Red);
-    my_canvas.drawObject(needle);
-
+    {
+      DrawingContext dc(my_canvas);
+      dc.setFillMode(roo_display::FILL_MODE_VISIBLE);
+      dc.draw(needle);
+    }
     Box extents = old_needle.extents();
     roo_display::BitMaskOffscreen bitmask(extents, color::Black);
 
     DrawingContext mask_dc(bitmask);
-    // Erase the old needle from the mask
+    // Erase the old needle from the mask.
     mask_dc.erase(old_needle);
     // But mask back the new needle as we don't want it overwritten.
     mask_dc.draw(needle);
@@ -206,9 +204,10 @@ void RadialGauge::paint(const Canvas& canvas) const {
     ClipMaskFilter filter(canvas.out(), &mask);
     my_canvas.set_out(&filter);
     if (face_ != nullptr) {
+      auto offset = center.resolveOffset(Box(0, 0, 159, 127), face_->anchorExtents());
       DrawingContext dc(my_canvas);
       dc.draw(*face_, center);
-      mask_dc.draw(*face_, center);
+      mask_dc.draw(*face_, offset.dx, offset.dy);
     }
     my_canvas.clearRect(extents);
   }
