@@ -118,7 +118,7 @@ class Needle : public Drawable {
  public:
   Needle(Point center, int16_t full_radius, int16_t thick_radius, float deg,
          Color color)
-      : center_{center.x, center.y},
+      : center_{(float)center.x, (float)center.y},
         tip_(polarToCartFp(deg, full_radius - 1, center_)),
         color_(color) {}
 
