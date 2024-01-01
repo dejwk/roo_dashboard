@@ -1,10 +1,10 @@
 #include <cmath>
 
 #include "roo_display.h"
+#include "roo_display/color/gradient.h"
 #include "roo_display/core/offscreen.h"
 #include "roo_display/font/font.h"
 #include "roo_display/shape/basic.h"
-#include "roo_display/ui/color_gradient.h"
 #include "roo_display/ui/string_printer.h"
 #include "roo_display/ui/text_label.h"
 #include "roo_smooth_fonts/NotoSans_Condensed/15.h"
@@ -14,9 +14,9 @@ namespace roo_dashboard {
 
 inline roo_display::Color colorForValue(float value) {
   static roo_display::ColorGradient gradient(
-      {std::make_pair(0.0, roo_display::color::Red),
-       std::make_pair(40.0, roo_display::color::White),
-       std::make_pair(100.0, roo_display::color::White)});
+      {{0.0, roo_display::color::Red},
+       {40.0, roo_display::color::White},
+       {100.0, roo_display::color::White}});
   return gradient.getColor(value);
 };
 

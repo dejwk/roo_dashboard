@@ -16,12 +16,12 @@ namespace {
 // Default gradient for the thermometer.
 const roo_display::ColorGradient& getDefaultColorGradient() {
   static roo_display::ColorGradient gradient({
-      std::make_pair(0.0, Color(0, 0, 0)),         // Black.
-      std::make_pair(12.0, Color(94, 94, 255)),    // Purplish blue.
-      std::make_pair(22.0, Color(153, 195, 255)),  // Light blue.
-      std::make_pair(23.0, Color(255, 207, 94)),   // Yellow.
-      std::make_pair(30.0, Color(255, 31, 31)),    // Red.
-      std::make_pair(40.0, Color(133, 0, 0)),      // Dark red.
+      {0.0, Color(0, 0, 0)},         // Black.
+      {12.0, Color(94, 94, 255)},    // Purplish blue.
+      {22.0, Color(153, 195, 255)},  // Light blue.
+      {23.0, Color(255, 207, 94)},   // Yellow.
+      {30.0, Color(255, 31, 31)},    // Red.
+      {40.0, Color(133, 0, 0)},      // Dark red.
   });
   return gradient;
 }

@@ -3,12 +3,12 @@
 #include <cmath>
 
 #include "roo_display.h"
+#include "roo_display/color/gradient.h"
 #include "roo_display/core/offscreen.h"
 #include "roo_display/filter/front_to_back_writer.h"
 #include "roo_display/font/font.h"
 #include "roo_display/shape/basic.h"
 #include "roo_display/shape/smooth.h"
-#include "roo_display/ui/color_gradient.h"
 #include "roo_display/ui/string_printer.h"
 #include "roo_display/ui/text_label.h"
 #include "roo_smooth_fonts/NotoSans_Condensed/15.h"
@@ -37,9 +37,8 @@ const Point polarToCart(float deg, float radius, Point center) {
 }
 
 const FpPoint polarToCartFp(float deg, float radius, FpPoint center) {
-  return FpPoint{
-      .x = center.x + sinf(deg * 2 * kPi / 360.0) * radius,
-      .y = center.y - cosf(deg * 2 * kPi / 360.0) * radius};
+  return FpPoint{.x = center.x + sinf(deg * 2 * kPi / 360.0) * radius,
+                 .y = center.y - cosf(deg * 2 * kPi / 360.0) * radius};
 }
 
 class GaugeBase : public Drawable {
@@ -204,7 +203,8 @@ void RadialGauge::paint(const Canvas& canvas) const {
     ClipMaskFilter filter(canvas.out(), &mask);
     my_canvas.set_out(&filter);
     if (face_ != nullptr) {
-      auto offset = center.resolveOffset(Box(0, 0, 159, 127), face_->anchorExtents());
+      auto offset =
+          center.resolveOffset(Box(0, 0, 159, 127), face_->anchorExtents());
       DrawingContext dc(my_canvas);
       dc.draw(*face_, center);
       mask_dc.draw(*face_, offset.dx, offset.dy);

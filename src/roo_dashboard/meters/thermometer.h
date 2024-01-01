@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "roo_display/ui/color_gradient.h"
+#include "roo_display/color/gradient.h"
 #include "roo_windows/core/panel.h"
 #include "roo_windows/core/widget.h"
 #include "roo_windows/widgets/text_label.h"
