@@ -2,13 +2,13 @@ cc_library(
     name = "roo_dashboard",
     srcs = glob(
         [
-            "**/*.cpp",
-            "**/*.h",
+            "src/**/*.cpp",
+            "src/**/*.h",
         ],
         exclude = ["test/**"],
     ),
     includes = [
-        ".",
+        "src",
     ],
     visibility = ["//visibility:public"],
     deps = [
