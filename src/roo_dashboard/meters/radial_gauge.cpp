@@ -122,12 +122,12 @@ class Needle : public Drawable {
         color_(color) {}
 
   Box extents() const {
-    return SmoothWedgedLine(center_, 15, tip_, 2, color_).extents();
+    return SmoothWedgedLine(center_, 15, tip_, 0, color_).extents();
   }
 
  private:
   void drawTo(const Surface& s) const override {
-    s.drawObject(SmoothWedgedLine(center_, 15, tip_, 2, color_));
+    s.drawObject(SmoothWedgedLine(center_, 15, tip_, 0, color_));
   }
 
   Point p0_, p1_, p2_, p3_, p4_;
