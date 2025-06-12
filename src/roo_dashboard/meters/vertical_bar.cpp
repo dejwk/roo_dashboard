@@ -3,7 +3,7 @@
 #include <cmath>
 
 #include "roo_display/color/color.h"
-#include "roo_display/ui/string_printer.h"
+#include "roo_io/text/string_printf.h"
 #include "roo_smooth_fonts/NotoSans_Regular/12.h"
 #include "roo_smooth_fonts/NotoSans_Regular/18.h"
 
@@ -73,7 +73,7 @@ void VerticalBar::Indicator::setValue(float value) {
     previous_color_ = color_;
     value_ = new_value;
     color_ = new_color;
-    markDirty();
+    setDirty();
   }
 }
 
@@ -99,8 +99,7 @@ void VerticalBar::setValue(float value) {
   if (value_ == value || (std::isnan(value_) && std::isnan(value))) return;
   value_ = value;
   indicator_.setValue(value);
-  caption_.setText(
-      StringPrintf(caption_template_.c_str(), value_));
+  caption_.setTextf(caption_template_.c_str(), value_);
   caption_.setVisibility(std::isnan(value_) ? GONE : VISIBLE);
 }
 
@@ -108,8 +107,8 @@ Dimensions VerticalBar::onMeasure(WidthSpec width, HeightSpec height) {
   Dimensions title = title_.measure(width, HeightSpec::Unspecified(18));
   indicator_.measure(width, HeightSpec::Unspecified(25));
   caption_.measure(WidthSpec::Unspecified(0), HeightSpec::Unspecified(0));
-  std::string test_str =
-      StringPrintf(caption_template_.c_str(), (500.0 / indicator_.scale()));
+  std::string test_str = roo_io::StringPrintf(caption_template_.c_str(),
+                                              (500.0 / indicator_.scale()));
   int16_t preferred_width =
       caption_.font().getHorizontalStringMetrics(test_str).width();
   Dimensions preferred(

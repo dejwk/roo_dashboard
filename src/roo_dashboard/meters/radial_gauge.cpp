@@ -9,10 +9,10 @@
 #include "roo_display/font/font.h"
 #include "roo_display/shape/basic.h"
 #include "roo_display/shape/smooth.h"
-#include "roo_display/ui/string_printer.h"
 #include "roo_display/ui/text_label.h"
 #include "roo_smooth_fonts/NotoSans_Condensed/15.h"
 #include "roo_windows/core/widget.h"
+#include "roo_io/text/string_printf.h"
 
 namespace roo_dashboard {
 
@@ -71,7 +71,7 @@ class GaugeBase : public Drawable {
       if (idx == 0) {
         out_radius += 5;
         const Font& font = font_NotoSans_Condensed_15();
-        TextLabel label(StringPrintf("%2.f", divider), font, color::Black);
+        TextLabel label(roo_io::StringPrintf("%2.f", divider), font, color::Black);
         Point label_pos =
             polarToCart(deg, out_radius + font.metrics().ascent(), center);
         s.drawObject(label, label_pos.x - label.metrics().width() / 2,
@@ -216,7 +216,7 @@ void RadialGauge::paint(const Canvas& canvas) const {
 void RadialGauge::setValue(float value) {
   if (current_value_ == value) return;
   current_value_ = value;
-  markDirty();
+  setDirty();
 }
 
 void RadialGauge::setFace(const roo_display::Drawable* face) {

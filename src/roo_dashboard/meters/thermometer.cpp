@@ -40,7 +40,7 @@ void Thermometer::Indicator::setTemperature(float tempC) {
   if (new_height_pixels != temp_height_pixels_) {
     temp_height_pixels_ = new_height_pixels;
     temp_color_ = temperature_gradient_.getColor(tempC);
-    markDirty();
+    setDirty();
   }
 }
 
