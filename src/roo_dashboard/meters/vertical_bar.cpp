@@ -62,10 +62,10 @@ void VerticalBar::Indicator::setValue(float value) {
   if (std::isnan(value)) {
     value_ = 0;
     setEnabled(false);
-    return;
-  }
+  } else {
   // If we were nan (disabled) before, this will also make us dirty.
-  setEnabled(true);
+    setEnabled(true);
+  }
   int16_t new_value = (int16_t)(value * scale_) + zero_offset_;
   Color new_color = color_fn_(new_value);
   if (new_value != value_ || new_color != color_) {
