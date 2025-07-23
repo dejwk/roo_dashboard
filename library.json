@@ -1,0 +1,31 @@
+{
+    "name": "roo_dashboard",
+    "description": "Specialized UI widgets based on roo_windows.",
+    "authors": [
+        {
+            "name": "Dejwk",
+            "email": "dejwk.oss@gmail.com",
+            "maintainer": true
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/dejwk/roo_dashboard"
+    },
+    "version": "1.0.0",
+    "homepage": "https://github.com/dejwk/roo_dashboard",
+    "frameworks": [
+        "Arduino",
+        "*"
+    ],
+    "build": {
+        "srcDir": "src",
+        "srcFilter": "+<*> -<examples> -<test>"
+    },
+    "examples": [
+        "examples/*/*.ino"
+    ],
+    "dependencies": {
+        "dejwk/roo_windows": ">=1.3.0"
+    }
+}
