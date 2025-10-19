@@ -12,6 +12,6 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//lib/roo_windows",
+        "@roo_windows",
     ],
 )
