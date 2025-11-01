@@ -12,7 +12,7 @@
         "type": "git",
         "url": "https://github.com/dejwk/roo_dashboard"
     },
-    "version": "1.0.0",
+    "version": "1.0.1",
     "homepage": "https://github.com/dejwk/roo_dashboard",
     "frameworks": [
         "Arduino",
@@ -26,6 +26,6 @@
         "examples/*/*.ino"
     ],
     "dependencies": {
-        "dejwk/roo_windows": ">=1.4.0"
+        "dejwk/roo_windows": ">=1.4.1"
     }
 }
