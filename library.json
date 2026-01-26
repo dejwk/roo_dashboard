@@ -26,6 +26,6 @@
         "examples/*/*.ino"
     ],
     "dependencies": {
-        "dejwk/roo_windows": ">=1.4.1"
+        "dejwk/roo_windows": ">=1.4.2"
     }
 }
