@@ -118,11 +118,12 @@ void BaseProgressBar::paintWidgetContents(const Canvas& canvas,
 
 PercentProgressBar::PercentProgressBar(const roo_windows::Environment& env)
     : BaseProgressBar(env),
-      percent_(env, "0%", font_button(), kMiddle | kCenter) {
-  setGravity(Gravity(kHorizontalGravityCenter, kVerticalGravityMiddle));
-  percent_.setPadding(PADDING_NONE);
-  percent_.setMargins(MARGIN_NONE);
-  setPadding(PADDING_TINY);
+      percent_(env, "0%", font_button(),
+               roo_windows::kGravityCenter | roo_windows::kGravityMiddle) {
+  setGravity(roo_windows::kGravityCenter | roo_windows::kGravityMiddle);
+  percent_.setPadding(roo_windows::PaddingSize::kNone);
+  percent_.setMargins(roo_windows::MarginSize::kNone);
+  setPadding(roo_windows::PaddingSize::kTiny);
   add(percent_);
 }
 

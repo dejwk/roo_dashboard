@@ -43,8 +43,9 @@ void VerticalBar::Indicator::paint(const Canvas& canvas) const {
   Canvas my_canvas = canvas;
   my_canvas.clipToExtents(clip_box);
   if (!my_canvas.clip_box().empty()) {
-    Color bar_color = AlphaBlend(background(), color_);
-    Color zero_color = AlphaBlend(background(), theme().color.onSurface);
+    Color background_color = canvas.bgcolor();
+    Color bar_color = AlphaBlend(background_color, color_);
+    Color zero_color = AlphaBlend(background_color, theme().color.onSurface);
     my_canvas.clearRect(0, 0, std::min(value_, zero_offset_) - 1, height() - 1);
     if (value_ < zero_offset_) {
       my_canvas.fillRect(value_, 0, zero_offset_ - 1, height() - 1, bar_color);
@@ -63,7 +64,7 @@ void VerticalBar::Indicator::setValue(float value) {
     value_ = 0;
     setEnabled(false);
   } else {
-  // If we were nan (disabled) before, this will also make us dirty.
+    // If we were nan (disabled) before, this will also make us dirty.
     setEnabled(true);
   }
   int16_t new_value = (int16_t)(value * scale_) + zero_offset_;
@@ -84,15 +85,16 @@ VerticalBar::VerticalBar(const roo_windows::Environment& env, float scale,
                          float initial_value)
     : Panel(env),
       title_(env, std::move(title), font_NotoSans_Regular_12(),
-             kLeft | kBottom),
+             roo_windows::kGravityLeft | roo_windows::kGravityBottom),
       indicator_(env, scale, zero_offset, color_fn, initial_value),
-      caption_(env, "", font_NotoSans_Regular_18(), kLeft | kTop),
+      caption_(env, "", font_NotoSans_Regular_18(),
+               roo_windows::kGravityLeft | roo_windows::kGravityTop),
       caption_template_(std::move(caption_template)) {
   add(title_);
   add(indicator_);
   add(caption_);
-  title_.setPadding(roo_windows::PADDING_NONE, roo_windows::PADDING_NONE);
-  caption_.setPadding(roo_windows::PADDING_NONE, roo_windows::PADDING_NONE);
+  title_.setPadding(roo_windows::PaddingSize::kNone);
+  caption_.setPadding(roo_windows::PaddingSize::kNone);
 }
 
 void VerticalBar::setValue(float value) {
@@ -100,7 +102,9 @@ void VerticalBar::setValue(float value) {
   value_ = value;
   indicator_.setValue(value);
   caption_.setTextf(caption_template_.c_str(), value_);
-  caption_.setVisibility(std::isnan(value_) ? GONE : VISIBLE);
+  caption_.setVisibility(std::isnan(value_)
+                             ? roo_windows::Visibility::kGone
+                             : roo_windows::Visibility::kVisible);
 }
 
 Dimensions VerticalBar::onMeasure(WidthSpec width, HeightSpec height) {

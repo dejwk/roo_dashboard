@@ -68,7 +68,7 @@ void Thermometer::Indicator::paint(const Canvas& canvas) const {
   Canvas my_canvas = canvas;
   my_canvas.shift(10, 10);
   roo_display::DrawingContext dc(my_canvas);
-  dc.setFillMode(roo_display::FILL_MODE_VISIBLE);
+  dc.setFillMode(roo_display::FillMode::kVisible);
 
   typedef RleImage4bppxBiased<Alpha4, ProgMemPtr> Img;
   const Img& img = thermometer_246x80_bar();
@@ -91,12 +91,12 @@ Thermometer::Thermometer(const roo_windows::Environment& env,
                          const roo_display::ColorGradient& temp_gradient)
     : roo_windows::Panel(env),
       indicator_(env, temp_gradient),
-      caption_(env, "", font_NotoSans_Regular_27(), kCenter | kTop) {
+      caption_(env, "", font_NotoSans_Regular_27(), roo_windows::kGravityTop) {
   add(indicator_);
   add(caption_);
   indicator_.setEnabled(false);
-  caption_.setPadding(roo_windows::PADDING_NONE);
-  caption_.setVisibility(GONE);
+  caption_.setPadding(roo_windows::PaddingSize::kNone);
+  caption_.setVisibility(roo_windows::Visibility::kGone);
 }
 
 void Thermometer::setTemperature(float tempC) {
@@ -104,7 +104,9 @@ void Thermometer::setTemperature(float tempC) {
   tempC_ = tempC;
   indicator_.setTemperature(tempC);
   caption_.setTextf("%.1f°C", tempC_);
-  caption_.setVisibility(std::isnan(tempC_) ? GONE : VISIBLE);
+  caption_.setVisibility(std::isnan(tempC_)
+                             ? roo_windows::Visibility::kGone
+                             : roo_windows::Visibility::kVisible);
 }
 
 Dimensions Thermometer::onMeasure(WidthSpec width, HeightSpec height) {
