@@ -10,9 +10,9 @@
 #include "roo_display/shape/basic.h"
 #include "roo_display/shape/smooth.h"
 #include "roo_display/ui/text_label.h"
+#include "roo_io/text/string_printf.h"
 #include "roo_smooth_fonts/NotoSans_Condensed/15.h"
 #include "roo_windows/core/widget.h"
-#include "roo_io/text/string_printf.h"
 
 namespace roo_dashboard {
 
@@ -71,7 +71,8 @@ class GaugeBase : public Drawable {
       if (idx == 0) {
         out_radius += 5;
         const Font& font = font_NotoSans_Condensed_15();
-        TextLabel label(roo_io::StringPrintf("%2.f", divider), font, color::Black);
+        TextLabel label(roo_io::StringPrintf("%2.f", divider), font,
+                        color::Black);
         Point label_pos =
             polarToCart(deg, out_radius + font.metrics().ascent(), center);
         s.drawObject(label, label_pos.x - label.metrics().width() / 2,
@@ -161,7 +162,7 @@ void RadialGauge::paint(const Canvas& canvas) const {
                 kMiddle.toTop().shiftBy(spec_.y_center + spec_.face_y_offset);
   if (isInvalidated()) {
     DrawingContext dc(my_canvas);
-    dc.setFillMode(roo_display::FILL_MODE_VISIBLE);
+    dc.setFillMode(roo_display::FillMode::kVisible);
     dc.setWriteOnce();
     dc.draw(
         FilledCircle::ByRadius(spec_.x_center, spec_.y_center, 7, color::Red));
@@ -181,7 +182,7 @@ void RadialGauge::paint(const Canvas& canvas) const {
                   needle_radius, needle_radius - 8, currentDeg(), color::Red);
     {
       DrawingContext dc(my_canvas);
-      dc.setFillMode(roo_display::FILL_MODE_VISIBLE);
+      dc.setFillMode(roo_display::FillMode::kVisible);
       dc.draw(needle);
     }
     Box extents = old_needle.extents();
