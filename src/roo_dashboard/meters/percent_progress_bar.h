@@ -40,8 +40,7 @@ class BaseProgressBar : public roo_windows::VerticalLayout {
 
   void setColors(roo_display::Color complete, roo_display::Color incomplete);
 
-  void paintWidgetContents(const roo_windows::Canvas& canvas,
-                           roo_windows::Clipper& clipper) override;
+  void paintWidgetContents(roo_windows::PaintContext& ctx) override;
 
  protected:
   virtual void updateChildren() {}

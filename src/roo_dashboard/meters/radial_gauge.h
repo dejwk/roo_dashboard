@@ -64,10 +64,9 @@ class RadialGauge : public roo_windows::Widget {
 
   roo_windows::Dimensions getSuggestedMinimumDimensions() const override;
 
-  void paintWidgetContents(const roo_windows::Canvas& canvas,
-                           roo_windows::Clipper& clipper) override;
+  void paintWidgetContents(roo_windows::PaintContext& ctx) override;
 
-  void paint(const roo_windows::Canvas& canvas) const override;
+  void paint(roo_windows::PaintContext& ctx) const override;
 
   void setValue(float value);
 

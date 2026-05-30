@@ -26,7 +26,7 @@ class Thermometer : public roo_windows::Panel {
       return roo_windows::Dimensions(56, 232);
     }
 
-    void paint(const roo_windows::Canvas& canvas) const override;
+    void paint(roo_windows::PaintContext& ctx) const override;
 
     void setTemperature(float tempC);
 

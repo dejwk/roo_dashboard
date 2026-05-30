@@ -38,9 +38,8 @@ class VerticalBar : public roo_windows::Panel {
                            PreferredSize::WrapContentHeight());
     }
 
-    void paintWidgetContents(const roo_windows::Canvas& canvas,
-                             roo_windows::Clipper& clipper) override;
-    void paint(const roo_windows::Canvas& canvas) const override;
+    void paintWidgetContents(roo_windows::PaintContext& ctx) override;
+    void paint(roo_windows::PaintContext& ctx) const override;
 
     void setValue(float value);
 

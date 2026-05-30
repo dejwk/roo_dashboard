@@ -87,33 +87,35 @@ void BaseProgressBar::setColors(roo_display::Color complete,
   incomplete_ = incomplete;
 }
 
-void BaseProgressBar::paintWidgetContents(const Canvas& canvas,
-                                          Clipper& clipper) {
+void BaseProgressBar::paintWidgetContents(PaintContext& ctx) {
   if (!isDirty()) {
-    Panel::paintWidgetContents(canvas, clipper);
+    Panel::paintWidgetContents(ctx);
     return;
   }
-  Canvas my_canvas(canvas);
+  Canvas my_canvas(ctx.canvas());
   if (progress_ == 0) {
-    my_canvas.set_bgcolor(AlphaBlend(canvas.bgcolor(), incomplete_));
-    Panel::paintWidgetContents(my_canvas, clipper);
+    my_canvas.set_bgcolor(AlphaBlend(ctx.bgcolor(), incomplete_));
+    PaintContext child_ctx(my_canvas, ctx.clipperForFramework());
+    Panel::paintWidgetContents(child_ctx);
     return;
   }
   if (progress_ == 1024) {
-    my_canvas.set_bgcolor(AlphaBlend(canvas.bgcolor(), complete_));
-    Panel::paintWidgetContents(my_canvas, clipper);
+    my_canvas.set_bgcolor(AlphaBlend(ctx.bgcolor(), complete_));
+    PaintContext child_ctx(my_canvas, ctx.clipperForFramework());
+    Panel::paintWidgetContents(child_ctx);
     return;
   }
 
-  BarRaster bar(Box(canvas.dx(), canvas.dy(), width() + canvas.dx() - 1,
-                    height() + canvas.dy() - 1),
-                AlphaBlend(canvas.bgcolor(), complete_),
-                AlphaBlend(canvas.bgcolor(), incomplete_),
-                (uint32_t)progress_ * width() / 1024 + canvas.dx());
+  BarRaster bar(Box(my_canvas.dx(), my_canvas.dy(), width() + my_canvas.dx() - 1,
+                    height() + my_canvas.dy() - 1),
+                AlphaBlend(ctx.bgcolor(), complete_),
+                AlphaBlend(ctx.bgcolor(), incomplete_),
+                (uint32_t)progress_ * width() / 1024 + my_canvas.dx());
   BackgroundFilter filter(my_canvas.out(), &bar);
   my_canvas.set_out(&filter);
   my_canvas.set_bgcolor(color::Background);
-  Panel::paintWidgetContents(my_canvas, clipper);
+  PaintContext child_ctx(my_canvas, ctx.clipperForFramework());
+  Panel::paintWidgetContents(child_ctx);
 }
 
 PercentProgressBar::PercentProgressBar(const roo_windows::Environment& env)

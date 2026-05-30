@@ -44,10 +44,10 @@ void Thermometer::Indicator::setTemperature(float tempC) {
   }
 }
 
-void Thermometer::Indicator::paint(const Canvas& canvas) const {
+void Thermometer::Indicator::paint(PaintContext& ctx) const {
   // For now, we use a fixed range.
   if (isInvalidated()) {
-    canvas.drawObject(thermometer_246x80_bounds());
+    ctx.drawObject(thermometer_246x80_bounds());
     // Draw ticks.
     for (int i = 0; i < 33; i++) {
       int y = (i * 5 + 15);
@@ -60,12 +60,12 @@ void Thermometer::Indicator::paint(const Canvas& canvas) const {
       } else if ((i - 4) % 2 == 0) {
         width = 5;
       }
-      canvas.fillRect(46, y, 46 + width - 1, y, color::Black);
-      canvas.fillRect(46, y + 1, 46 + width - 1, y + 1, color::LightGray);
+      ctx.fillRect(46, y, 46 + width - 1, y, color::Black);
+      ctx.fillRect(46, y + 1, 46 + width - 1, y + 1, color::LightGray);
     }
   }
 
-  Canvas my_canvas = canvas;
+  Canvas my_canvas = ctx.canvas();
   my_canvas.shift(10, 10);
   roo_display::DrawingContext dc(my_canvas);
   dc.setFillMode(roo_display::FillMode::kVisible);

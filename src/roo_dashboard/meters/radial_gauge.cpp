@@ -143,16 +143,17 @@ Dimensions RadialGauge::getSuggestedMinimumDimensions() const {
                     (spec_.radius + spec_.scale_width) * 2);
 }
 
-void RadialGauge::paintWidgetContents(const Canvas& canvas, Clipper& clipper) {
-  Widget::paintWidgetContents(canvas, clipper);
+void RadialGauge::paintWidgetContents(PaintContext& ctx) {
+  Widget::paintWidgetContents(ctx);
   previous_value_ = current_value_;
 }
 
-void RadialGauge::paint(const Canvas& canvas) const {
+void RadialGauge::paint(PaintContext& ctx) const {
+  const Canvas& canvas = ctx.canvas();
   GaugeBase base(&spec_);
   if (isInvalidated()) {
-    canvas.drawObject(roo_display::Border(this->bounds().asBox(),
-                                          base.extents(), canvas.bgcolor()));
+    ctx.drawObject(roo_display::Border(this->bounds().asBox(),
+                                       base.extents(), ctx.bgcolor()));
   }
   Canvas my_canvas(canvas);
   my_canvas.clipToExtents(base.extents());

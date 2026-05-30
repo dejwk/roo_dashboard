@@ -12,14 +12,13 @@ using namespace roo_windows;
 
 namespace roo_dashboard {
 
-void VerticalBar::Indicator::paintWidgetContents(const Canvas& canvas,
-                                                 Clipper& clipper) {
-  Widget::paintWidgetContents(canvas, clipper);
+void VerticalBar::Indicator::paintWidgetContents(PaintContext& ctx) {
+  Widget::paintWidgetContents(ctx);
   previous_color_ = color_;
   previous_value_ = value_;
 }
 
-void VerticalBar::Indicator::paint(const Canvas& canvas) const {
+void VerticalBar::Indicator::paint(PaintContext& ctx) const {
   // Figure out the region that needs to be redrawn.
   roo_windows::Rect clip_box = bounds();
   if (!isInvalidated()) {
@@ -40,10 +39,10 @@ void VerticalBar::Indicator::paint(const Canvas& canvas) const {
       }
     }
   }
-  Canvas my_canvas = canvas;
+  Canvas my_canvas = ctx.canvas();
   my_canvas.clipToExtents(clip_box);
   if (!my_canvas.clip_box().empty()) {
-    Color background_color = canvas.bgcolor();
+    Color background_color = ctx.bgcolor();
     Color bar_color = AlphaBlend(background_color, color_);
     Color zero_color = AlphaBlend(background_color, theme().color.onSurface);
     my_canvas.clearRect(0, 0, std::min(value_, zero_offset_) - 1, height() - 1);
