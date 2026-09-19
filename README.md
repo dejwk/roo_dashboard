@@ -2,6 +2,9 @@
 
 Dashboard UI components built on the Roo display and windowing stack.
 
+Requires roo_windows 1.7.0 or newer. Construct widgets with the application
+context, for example `roo_dashboard::Thermometer thermometer(app.context());`.
+
 ## Host emulation
 
 Host builds use the roo_testing 2.0 Arduino ESP32 profile. With Bazelisk 1.21
