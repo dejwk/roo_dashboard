@@ -13,6 +13,11 @@ using namespace roo_windows;
 namespace roo_dashboard {
 
 namespace {
+const TextStyle& captionTextStyle() {
+  static const TextStyle style(font_NotoSans_Regular_27(), 0, 0);
+  return style;
+}
+
 // Default gradient for the thermometer.
 const roo_display::ColorGradient& getDefaultColorGradient() {
   static roo_display::ColorGradient gradient({
@@ -72,7 +77,7 @@ void Thermometer::Indicator::paint(PaintContext& ctx) const {
 
   typedef RleImage4bppxBiased<Alpha4, ProgMemPtr> Img;
   const Img& img = thermometer_246x80_bar();
-  Img top(img.extents(), img.resource(), Alpha4(theme().color.background));
+  Img top(img.extents(), img.resource(), Alpha4(theme().framework.color.canvas));
   Img bottom(img.extents(), img.resource(), Alpha4(temp_color_));
 
   // Box clip = news.clip_box();
@@ -84,14 +89,14 @@ void Thermometer::Indicator::paint(PaintContext& ctx) const {
   dc.draw(bottom);
 }
 
-Thermometer::Thermometer(const roo_windows::Environment& env)
+Thermometer::Thermometer(roo_windows::ApplicationContext& env)
     : Thermometer(env, getDefaultColorGradient()) {}
 
-Thermometer::Thermometer(const roo_windows::Environment& env,
+Thermometer::Thermometer(roo_windows::ApplicationContext& env,
                          const roo_display::ColorGradient& temp_gradient)
     : roo_windows::Panel(env),
       indicator_(env, temp_gradient),
-      caption_(env, "", font_NotoSans_Regular_27(), roo_windows::kGravityTop) {
+      caption_(env, "", captionTextStyle(), roo_windows::kGravityTop) {
   add(indicator_);
   add(caption_);
   indicator_.setEnabled(false);

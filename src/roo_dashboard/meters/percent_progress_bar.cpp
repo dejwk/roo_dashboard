@@ -59,16 +59,16 @@ class BarRaster : public roo_display::Rasterizable {
 };
 
 Color defaultIncompleteColor(const Theme& theme, Color complete) {
-  complete.set_a(theme.state.disabled);
+  complete.set_a(theme.framework.interaction.disabledContentOpacity);
   return complete;
 }
 
 }  // namespace
 
-BaseProgressBar::BaseProgressBar(const roo_windows::Environment& env)
+BaseProgressBar::BaseProgressBar(roo_windows::ApplicationContext& env)
     : roo_windows::VerticalLayout(env),
       progress_(0),
-      complete_(env.theme().color.secondary),
+      complete_(env.theme().framework.color.emphasis),
       incomplete_(defaultIncompleteColor(env.theme(), complete_)) {}
 
 void BaseProgressBar::setColor(roo_display::Color color) {
@@ -118,9 +118,9 @@ void BaseProgressBar::paintWidgetContents(PaintContext& ctx) {
   Panel::paintWidgetContents(child_ctx);
 }
 
-PercentProgressBar::PercentProgressBar(const roo_windows::Environment& env)
+PercentProgressBar::PercentProgressBar(roo_windows::ApplicationContext& env)
     : BaseProgressBar(env),
-      percent_(env, "0%", font_button(),
+      percent_(env, "0%", material2::text_style_button(),
                roo_windows::kGravityCenter | roo_windows::kGravityMiddle) {
   setGravity(roo_windows::kGravityCenter | roo_windows::kGravityMiddle);
   percent_.setPadding(roo_windows::PaddingSize::kNone);

@@ -41,7 +41,7 @@ class RadialGauge : public roo_windows::Widget {
     int16_t face_y_offset;
   };
 
-  RadialGauge(const roo_windows::Environment& env, float value = 0)
+  RadialGauge(roo_windows::ApplicationContext& env, float value = 0)
       : Widget(env),
         spec_{.extents = roo_display::Box(0, 50, 310, 200),
               .x_center = 160,

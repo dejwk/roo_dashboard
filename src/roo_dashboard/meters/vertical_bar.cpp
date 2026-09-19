@@ -12,6 +12,18 @@ using namespace roo_windows;
 
 namespace roo_dashboard {
 
+namespace {
+const TextStyle& titleTextStyle() {
+  static const TextStyle style(font_NotoSans_Regular_12(), 0, 0);
+  return style;
+}
+
+const TextStyle& captionTextStyle() {
+  static const TextStyle style(font_NotoSans_Regular_18(), 0, 0);
+  return style;
+}
+}  // namespace
+
 void VerticalBar::Indicator::paintWidgetContents(PaintContext& ctx) {
   Widget::paintWidgetContents(ctx);
   previous_color_ = color_;
@@ -44,7 +56,8 @@ void VerticalBar::Indicator::paint(PaintContext& ctx) const {
   if (!my_canvas.clip_box().empty()) {
     Color background_color = ctx.bgcolor();
     Color bar_color = AlphaBlend(background_color, color_);
-    Color zero_color = AlphaBlend(background_color, theme().color.onSurface);
+    Color zero_color =
+        AlphaBlend(background_color, theme().framework.color.content);
     my_canvas.clearRect(0, 0, std::min(value_, zero_offset_) - 1, height() - 1);
     if (value_ < zero_offset_) {
       my_canvas.fillRect(value_, 0, zero_offset_ - 1, height() - 1, bar_color);
@@ -77,16 +90,16 @@ void VerticalBar::Indicator::setValue(float value) {
   }
 }
 
-VerticalBar::VerticalBar(const roo_windows::Environment& env, float scale,
+VerticalBar::VerticalBar(roo_windows::ApplicationContext& env, float scale,
                          int16_t zero_offset,
                          std::function<roo_display::Color(float val)> color_fn,
                          std::string title, std::string caption_template,
                          float initial_value)
     : Panel(env),
-      title_(env, std::move(title), font_NotoSans_Regular_12(),
+      title_(env, std::move(title), titleTextStyle(),
              roo_windows::kGravityLeft | roo_windows::kGravityBottom),
       indicator_(env, scale, zero_offset, color_fn, initial_value),
-      caption_(env, "", font_NotoSans_Regular_18(),
+      caption_(env, "", captionTextStyle(),
                roo_windows::kGravityLeft | roo_windows::kGravityTop),
       caption_template_(std::move(caption_template)) {
   add(title_);

@@ -15,7 +15,7 @@ class VerticalBar : public roo_windows::Panel {
  public:
   class Indicator : public roo_windows::Widget {
    public:
-    Indicator(const roo_windows::Environment& env, float scale,
+    Indicator(roo_windows::ApplicationContext& env, float scale,
               int16_t zero_offset,
               std::function<roo_display::Color(float val)> color_fn,
               float initial_value)
@@ -58,7 +58,7 @@ class VerticalBar : public roo_windows::Panel {
     int16_t previous_value_;
   };
 
-  VerticalBar(const roo_windows::Environment& env, float scale,
+  VerticalBar(roo_windows::ApplicationContext& env, float scale,
               int16_t zero_offset,
               std::function<roo_display::Color(float val)> color_fn,
               std::string title, std::string caption_template,

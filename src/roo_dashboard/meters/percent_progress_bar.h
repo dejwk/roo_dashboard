@@ -14,7 +14,7 @@ namespace roo_dashboard {
 
 class BaseProgressBar : public roo_windows::VerticalLayout {
  public:
-  BaseProgressBar(const roo_windows::Environment& env);
+  BaseProgressBar(roo_windows::ApplicationContext& env);
 
   void setProgress(uint16_t progress) {
     if (progress < 0) progress = 0;
@@ -53,7 +53,7 @@ class BaseProgressBar : public roo_windows::VerticalLayout {
 // the bar. You can adjust padding, font, and colors of the bar.
 class PercentProgressBar : public BaseProgressBar {
  public:
-  PercentProgressBar(const roo_windows::Environment& env);
+  PercentProgressBar(roo_windows::ApplicationContext& env);
 
   void setFont(const roo_display::Font& font);
   // void setGravity(roo_windows::HorizontalGravity gravity);

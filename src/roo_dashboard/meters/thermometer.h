@@ -15,7 +15,7 @@ class Thermometer : public roo_windows::Panel {
  public:
   class Indicator : public roo_windows::Widget {
    public:
-    Indicator(const roo_windows::Environment& env,
+    Indicator(roo_windows::ApplicationContext& env,
               const roo_display::ColorGradient& temperature_gradient)
         : roo_windows::Widget(env),
           temperature_gradient_(temperature_gradient) {
@@ -36,9 +36,9 @@ class Thermometer : public roo_windows::Panel {
     roo_display::Color temp_color_;
   };
 
-  Thermometer(const roo_windows::Environment& env);
+  Thermometer(roo_windows::ApplicationContext& env);
 
-  Thermometer(const roo_windows::Environment& env,
+  Thermometer(roo_windows::ApplicationContext& env,
               const roo_display::ColorGradient& temp_gradient);
 
   void setTemperature(float tempC);
