@@ -124,7 +124,6 @@ PercentProgressBar::PercentProgressBar(roo_windows::ApplicationContext& env)
                roo_windows::kGravityCenter | roo_windows::kGravityMiddle) {
   setGravity(roo_windows::kGravityCenter | roo_windows::kGravityMiddle);
   percent_.setPadding(roo_windows::PaddingSize::kNone);
-  percent_.setMargins(roo_windows::MarginSize::kNone);
   setPadding(roo_windows::PaddingSize::kTiny);
   add(percent_);
 }
