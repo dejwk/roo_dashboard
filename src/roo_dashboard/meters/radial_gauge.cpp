@@ -4,14 +4,12 @@
 
 #include "roo_display.h"
 #include "roo_display/color/gradient.h"
-#include "roo_display/core/offscreen.h"
-#include "roo_display/filter/front_to_back_writer.h"
 #include "roo_display/font/font.h"
 #include "roo_display/shape/basic.h"
 #include "roo_display/shape/smooth.h"
 #include "roo_display/ui/text_label.h"
-#include "roo_io/text/string_printf.h"
 #include "roo_fonts/NotoSans_Condensed/15.h"
+#include "roo_io/text/string_printf.h"
 #include "roo_windows/core/widget.h"
 
 namespace roo_dashboard {
@@ -149,70 +147,42 @@ void RadialGauge::paintWidgetContents(PaintContext& ctx) {
 }
 
 void RadialGauge::paint(PaintContext& ctx) const {
-  const Canvas& canvas = ctx.canvas();
+  if (!isInvalidated() && previous_value_ == current_value_) return;
+
   GaugeBase base(&spec_);
   if (isInvalidated()) {
-    ctx.drawObject(roo_display::Border(this->bounds().asBox(),
-                                       base.extents(), ctx.bgcolor()));
+    ctx.drawObject(Border(bounds().asBox(), base.extents(), ctx.bgcolor()));
   }
-  Canvas my_canvas(canvas);
-  my_canvas.clipToExtents(base.extents());
-  if (my_canvas.clip_box().empty()) return;
+  Canvas canvas(ctx.canvas());
+  canvas.clipToExtents(base.extents());
   int16_t needle_radius = spec_.radius - 2;
-  auto center = kCenter.toLeft().shiftBy(spec_.x_center + spec_.face_x_offset) |
-                kMiddle.toTop().shiftBy(spec_.y_center + spec_.face_y_offset);
-  if (isInvalidated()) {
-    DrawingContext dc(my_canvas);
-    dc.setFillMode(roo_display::FillMode::kVisible);
-    dc.setWriteOnce();
-    dc.draw(
-        FilledCircle::ByRadius(spec_.x_center, spec_.y_center, 7, color::Red));
-    if (face_ != nullptr) {
-      dc.draw(*face_, center);
-    }
-    dc.draw(base);
-    Needle needle(Point{.x = spec_.x_center, .y = spec_.y_center},
-                  needle_radius, needle_radius - 8, currentDeg(), color::Red);
-    dc.draw(needle);
-  } else {
-    if (previous_value_ == current_value_) return;
+  Needle needle(Point{.x = spec_.x_center, .y = spec_.y_center}, needle_radius,
+                needle_radius - 8, currentDeg(), color::Red);
+  if (!isInvalidated()) {
     Needle old_needle(Point{.x = spec_.x_center, .y = spec_.y_center},
                       needle_radius, needle_radius - 8, previousDeg(),
                       color::Red);
-    Needle needle(Point{.x = spec_.x_center, .y = spec_.y_center},
-                  needle_radius, needle_radius - 8, currentDeg(), color::Red);
-    {
-      DrawingContext dc(my_canvas);
-      dc.setFillMode(roo_display::FillMode::kVisible);
-      dc.draw(needle);
-    }
-    Box extents = old_needle.extents();
-    roo_display::BitMaskOffscreen bitmask(extents, color::Black);
-
-    DrawingContext mask_dc(bitmask);
-    // Erase the old needle from the mask.
-    mask_dc.erase(old_needle);
-    // But mask back the new needle as we don't want it overwritten.
-    mask_dc.draw(needle);
-    // Also mask back the center circle.
-    mask_dc.draw(
-        FilledCircle::ByRadius(spec_.x_center, spec_.y_center, 7, color::Red));
-
-    // Now, the clip mask passes the pixels of the old needle that are not
-    // obstructed by the new needle.
-    ClipMask mask(bitmask.buffer(),
-                  bitmask.extents().translate(my_canvas.dx(), my_canvas.dy()));
-    ClipMaskFilter filter(canvas.out(), &mask);
-    my_canvas.set_out(&filter);
-    if (face_ != nullptr) {
-      auto offset =
-          center.resolveOffset(Box(0, 0, 159, 127), face_->anchorExtents());
-      DrawingContext dc(my_canvas);
-      dc.draw(*face_, center);
-      mask_dc.draw(*face_, offset.dx, offset.dy);
-    }
-    my_canvas.clearRect(extents);
+    canvas.clipToExtents(Box::Extent(old_needle.extents(), needle.extents()));
   }
+  if (canvas.clip_box().empty()) return;
+
+  // Recompose the affected region front to back, including the background.
+  // Keep alignment independent of the moving needle's smaller dirty region.
+  DrawingContext dc(canvas, base.extents());
+  dc.setFillMode(FillMode::kVisible);
+  dc.setWriteOnce();
+  dc.draw(
+      FilledCircle::ByRadius(spec_.x_center, spec_.y_center, 7, color::Red));
+  if (face_ != nullptr) {
+    auto center =
+        kCenter.toLeft().shiftBy(spec_.x_center + spec_.face_x_offset) |
+        kMiddle.toTop().shiftBy(spec_.y_center + spec_.face_y_offset);
+    dc.draw(*face_, center);
+  }
+  dc.draw(needle);
+  dc.draw(base);
+  // Fill only pixels not already settled by the foreground, avoiding flicker.
+  dc.clear();
 }
 
 void RadialGauge::setValue(float value) {

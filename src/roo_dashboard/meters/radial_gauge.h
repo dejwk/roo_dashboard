@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cmath>
 
 #include "roo_display.h"
@@ -59,6 +61,7 @@ class RadialGauge : public roo_windows::Widget {
               .scale_color = &colorForValue,
               .face_x_offset = 0,
               .face_y_offset = -80},
+        face_(nullptr),
         current_value_(value),
         previous_value_(value) {}
 
