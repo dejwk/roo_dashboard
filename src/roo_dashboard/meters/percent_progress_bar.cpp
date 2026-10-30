@@ -6,8 +6,9 @@
 #include "roo_display/core/rasterizable.h"
 #include "roo_display/filter/background.h"
 #include "roo_windows/core/theme.h"
-#include "roo_smooth_fonts/NotoSans_Regular/12.h"
-#include "roo_smooth_fonts/NotoSans_Regular/18.h"
+#include "roo_windows/material2/typography.h"
+#include "roo_fonts/NotoSans_Regular/12.h"
+#include "roo_fonts/NotoSans_Regular/18.h"
 
 using namespace roo_display;
 using namespace roo_windows;
@@ -59,7 +60,7 @@ class BarRaster : public roo_display::Rasterizable {
 };
 
 Color defaultIncompleteColor(const Theme& theme, Color complete) {
-  complete.set_a(theme.framework.interaction.disabledContentOpacity);
+  complete.set_a(theme.framework.state.disabledContentOpacity);
   return complete;
 }
 
@@ -68,7 +69,7 @@ Color defaultIncompleteColor(const Theme& theme, Color complete) {
 BaseProgressBar::BaseProgressBar(roo_windows::ApplicationContext& env)
     : roo_windows::VerticalLayout(env),
       progress_(0),
-      complete_(env.theme().framework.color.emphasis),
+      complete_(env.theme().framework.emphasis),
       incomplete_(defaultIncompleteColor(env.theme(), complete_)) {}
 
 void BaseProgressBar::setColor(roo_display::Color color) {

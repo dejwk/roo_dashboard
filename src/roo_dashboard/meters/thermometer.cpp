@@ -5,7 +5,7 @@
 #include "roo_display/color/color.h"
 #include "roo_display/shape/basic.h"
 #include "roo_display/ui/string_printer.h"
-#include "roo_smooth_fonts/NotoSans_Regular/27.h"
+#include "roo_fonts/NotoSans_Regular/27.h"
 
 using namespace roo_display;
 using namespace roo_windows;
@@ -77,7 +77,7 @@ void Thermometer::Indicator::paint(PaintContext& ctx) const {
 
   typedef RleImage4bppxBiased<Alpha4, ProgMemPtr> Img;
   const Img& img = thermometer_246x80_bar();
-  Img top(img.extents(), img.resource(), Alpha4(theme().framework.color.canvas));
+  Img top(img.extents(), img.resource(), Alpha4(theme().framework.canvas));
   Img bottom(img.extents(), img.resource(), Alpha4(temp_color_));
 
   // Box clip = news.clip_box();

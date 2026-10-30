@@ -4,8 +4,8 @@
 
 #include "roo_display/color/color.h"
 #include "roo_io/text/string_printf.h"
-#include "roo_smooth_fonts/NotoSans_Regular/12.h"
-#include "roo_smooth_fonts/NotoSans_Regular/18.h"
+#include "roo_fonts/NotoSans_Regular/12.h"
+#include "roo_fonts/NotoSans_Regular/18.h"
 
 using namespace roo_display;
 using namespace roo_windows;
@@ -57,7 +57,7 @@ void VerticalBar::Indicator::paint(PaintContext& ctx) const {
     Color background_color = ctx.bgcolor();
     Color bar_color = AlphaBlend(background_color, color_);
     Color zero_color =
-        AlphaBlend(background_color, theme().framework.color.content);
+        AlphaBlend(background_color, theme().framework.content);
     my_canvas.clearRect(0, 0, std::min(value_, zero_offset_) - 1, height() - 1);
     if (value_ < zero_offset_) {
       my_canvas.fillRect(value_, 0, zero_offset_ - 1, height() - 1, bar_color);
