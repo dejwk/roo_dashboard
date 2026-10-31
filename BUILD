@@ -25,3 +25,10 @@ cc_test(
     srcs = ["test/radial_gauge_test.cpp"],
     deps = [":roo_dashboard", "@roo_testing//:arduino_gtest_main"],
 )
+
+cc_test(
+    name = "modern_radial_gauge_test",
+    size = "small",
+    srcs = ["test/modern_radial_gauge_test.cpp"],
+    deps = [":roo_dashboard", "@roo_testing//:arduino_gtest_main"],
+)

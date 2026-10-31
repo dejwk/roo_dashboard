@@ -1,6 +1,8 @@
 #include "roo_dashboard/meters/radial_gauge.h"
 
 #include <algorithm>
+#include <chrono>
+#include <cstdio>
 #include <memory>
 #include <vector>
 
@@ -21,9 +23,13 @@ class CountingDisplay
       : OffscreenDevice(width, height, data, roo_display::Argb4444()),
         writes(width * height),
         stride_(width) {}
-  void reset() { std::fill(writes.begin(), writes.end(), 0); }
+  void reset() {
+    std::fill(writes.begin(), writes.end(), 0);
+    addresses = 0;
+  }
   void setAddress(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
                   roo_display::BlendingMode mode) override {
+    ++addresses;
     left = x = x0;
     right = x1;
     y = y0;
@@ -75,6 +81,7 @@ class CountingDisplay
     }
   }
   std::vector<uint8_t> writes;
+  int addresses = 0;
 
  private:
   int32_t stride_;
@@ -98,82 +105,158 @@ TEST(RadialGaugeTest, ClearsBackgroundAndRestoresNeedleWithoutTrails) {
   using namespace roo_windows;
   for (Color background :
        {Color(roo_display::color::White), Color(0xFFEEEEEE)}) {
-    std::vector<roo::byte> pixels(160 * 128 * 2);
-    CountingDisplay device(pixels.data());
-    roo_display::Display display(device);
-    roo_scheduler::SchedulingService scheduler;
-    Theme theme;
-    theme.framework.canvas = background;
-    theme.framework.surface = background;
-    Environment environment(scheduler, theme);
-    auto app = std::make_unique<Application>(&environment, display);
-    app->refresh();
-    roo_display::TextLabel face("bar",
-                                roo_display::font_NotoSans_Condensed_15(),
-                                roo_display::color::Black);
-    roo_dashboard::RadialGauge gauge(app->context());
-    gauge.setFace(&face);
-    gauge.setBounds(roo_display::Box(0, 0, 159, 79));
-    gauge.setCenter(80, 150);
-    gauge.setScaleRadius(100);
-    gauge.setRangeAngles(-30, 30);
-    gauge.setValueRange(0, 5);
-    gauge.setDividers(1, 5);
-    gauge.setScaleWidth(15);
-    Task& task = app->addTask(gauge, roo_display::Box(0, 20, 159, 99));
-    CoveredPage cover(app->context());
-    auto snapshot = [&] {
-      std::vector<Color> colors(160 * 80);
-      for (int16_t y = 20; y < 100; ++y)
-        for (int16_t x = 0; x < 160; ++x)
-          device.raster().readColors(&x, &y, 1, &colors[(y - 20) * 160 + x]);
-      return colors;
-    };
-    auto render = [&] {
-      device.reset();
+    for (bool turbo : {false, true}) {
+      SCOPED_TRACE(turbo);
+      std::vector<roo::byte> pixels(160 * 128 * 2);
+      CountingDisplay device(pixels.data());
+      roo_display::Display display(device);
+      if (turbo) display.enableTurbo();
+      roo_scheduler::SchedulingService scheduler;
+      Theme theme;
+      theme.framework.canvas = background;
+      theme.framework.surface = background;
+      Environment environment(scheduler, theme);
+      auto app = std::make_unique<Application>(&environment, display);
       app->refresh();
-      EXPECT_LE(*std::max_element(device.writes.begin(), device.writes.end()),
-                1);
-    };
-    // An invalidation must replace all previously displayed content.
-    device.fillRect(roo_display::BlendingMode::kSource, 0, 20, 159, 99,
-                    roo_display::color::Magenta);
-    render();
-    std::vector<Color> initial = snapshot();
-    EXPECT_EQ(initial.front(), background);
-    EXPECT_EQ(std::count(initial.begin(), initial.end(),
-                         Color(roo_display::color::Magenta)),
-              0);
-    for (float value : {1.0f, 2.5f, 4.8f, 0.1f}) {
-      SCOPED_TRACE(value);
-      gauge.setValue(value);
+      roo_display::TextLabel face("bar",
+                                  roo_display::font_NotoSans_Condensed_15(),
+                                  roo_display::color::Black);
+      roo_dashboard::RadialGauge gauge(app->context());
+      gauge.setFace(&face);
+      gauge.setBounds(roo_display::Box(0, 0, 159, 79));
+      gauge.setCenter(80, 150);
+      gauge.setScaleRadius(100);
+      gauge.setRangeAngles(-30, 30);
+      gauge.setValueRange(0, 5);
+      gauge.setDividers(1, 5);
+      gauge.setScaleWidth(15);
+      Task& task = app->addTask(gauge, roo_display::Box(0, 20, 159, 99));
+      CoveredPage cover(app->context());
+      auto snapshot = [&] {
+        std::vector<Color> colors(160 * 80);
+        for (int16_t y = 20; y < 100; ++y)
+          for (int16_t x = 0; x < 160; ++x)
+            device.raster().readColors(&x, &y, 1, &colors[(y - 20) * 160 + x]);
+        return colors;
+      };
+      auto fill_sentinel = [&] {
+        // Go through the display so turbo's color knowledge stays valid.
+        roo_display::DrawingContext dc(display,
+                                       roo_display::Box(0, 20, 159, 99));
+        dc.fill(roo_display::color::Magenta);
+      };
+      auto render = [&] {
+        device.reset();
+        app->refresh();
+        EXPECT_LE(*std::max_element(device.writes.begin(), device.writes.end()),
+                  1);
+      };
+      // An invalidation must replace all previously displayed content.
+      fill_sentinel();
       render();
-      std::vector<Color> moving = snapshot();
-      device.fillRect(roo_display::BlendingMode::kSource, 0, 20, 159, 99,
-                      roo_display::color::Magenta);
+      std::vector<Color> initial = snapshot();
+      EXPECT_EQ(initial.front(), background);
+      EXPECT_EQ(std::count(initial.begin(), initial.end(),
+                           Color(roo_display::color::Magenta)),
+                0);
+      for (float value : {1.0f, 2.5f, 4.8f, 0.1f}) {
+        SCOPED_TRACE(value);
+        gauge.setValue(value);
+        render();
+        std::vector<Color> moving = snapshot();
+        fill_sentinel();
+        gauge.invalidateInterior();
+        render();
+        EXPECT_TRUE(moving == snapshot());
+      }
+      std::vector<Color> before_menu = snapshot();
+      task.navigation().push(cover);
+      render();
+      task.navigation().pop();
+      render();
+      EXPECT_TRUE(before_menu == snapshot());
+      task.navigation().push(cover);
+      render();
+      gauge.setValue(3.5f);
+      task.navigation().pop();
+      render();
+      std::vector<Color> restored = snapshot();
+      fill_sentinel();
       gauge.invalidateInterior();
       render();
-      EXPECT_TRUE(moving == snapshot());
+      EXPECT_TRUE(restored == snapshot());
+      EXPECT_NE(before_menu, restored);
+      app.reset();
     }
-    std::vector<Color> before_menu = snapshot();
-    task.navigation().push(cover);
-    render();
-    task.navigation().pop();
-    render();
-    EXPECT_TRUE(before_menu == snapshot());
-    task.navigation().push(cover);
-    render();
-    gauge.setValue(3.5f);
-    task.navigation().pop();
-    render();
-    std::vector<Color> restored = snapshot();
-    device.fillRect(roo_display::BlendingMode::kSource, 0, 20, 159, 99,
-                    roo_display::color::Magenta);
-    gauge.invalidateInterior();
-    render();
-    EXPECT_TRUE(restored == snapshot());
-    EXPECT_NE(before_menu, restored);
-    app.reset();
   }
+}
+
+// Verifies repeated full and incremental rendering while reporting host render
+// time and address-window traffic. Timing is diagnostic, never an assertion.
+TEST(RadialGaugeTest, RenderingWorkload) {
+  using namespace roo_windows;
+  std::vector<roo::byte> pixels(160 * 128 * 2);
+  CountingDisplay device(pixels.data());
+  roo_display::Display display(device);
+  roo_scheduler::SchedulingService scheduler;
+  Environment environment(scheduler);
+  auto app = std::make_unique<Application>(&environment, display);
+  app->refresh();
+  roo_display::TextLabel face("bar", roo_display::font_NotoSans_Condensed_15(),
+                              roo_display::color::Black);
+  roo_dashboard::RadialGauge gauge(app->context());
+  gauge.setFace(&face);
+  gauge.setBounds(roo_display::Box(0, 0, 159, 79));
+  gauge.setCenter(80, 150);
+  gauge.setScaleRadius(100);
+  gauge.setRangeAngles(-30, 30);
+  gauge.setValueRange(0, 5);
+  gauge.setDividers(1, 5);
+  gauge.setScaleWidth(15);
+  app->addTask(gauge, roo_display::Box(0, 20, 159, 99));
+  app->refresh();
+  constexpr int kFrames = 100;
+  int plain_full_pixels = 0;
+  for (bool turbo : {false, true}) {
+    if (turbo) display.enableTurbo();
+    for (bool full : {true, false}) {
+      double microseconds = 0;
+      int addresses = 0;
+      int pixels_written = 0;
+      for (int frame = 0; frame < kFrames; ++frame) {
+        gauge.setValue(frame % 2 == 0 ? 2.5f : 2.6f);
+        if (full) gauge.invalidateInterior();
+        device.reset();
+        auto start = std::chrono::steady_clock::now();
+        app->refresh();
+        auto end = std::chrono::steady_clock::now();
+        microseconds +=
+            std::chrono::duration<double, std::micro>(end - start).count();
+        // Bound serial-display command traffic without asserting host timings.
+        if (!turbo) {
+          EXPECT_LE(device.addresses, full ? 2000 : 250);
+        }
+        addresses += device.addresses;
+        pixels_written +=
+            std::count(device.writes.begin(), device.writes.end(), 1);
+        EXPECT_LE(*std::max_element(device.writes.begin(), device.writes.end()),
+                  1);
+      }
+      std::printf(
+          "gauge %s %s: %.1f us/frame, %.1f address windows/frame, %.1f "
+          "pixels/frame\n",
+          turbo ? "turbo" : "plain", full ? "full" : "incremental",
+          microseconds / kFrames, double(addresses) / kFrames,
+          double(pixels_written) / kFrames);
+      if (full) {
+        if (turbo) {
+          EXPECT_LT(pixels_written, plain_full_pixels);
+        } else {
+          plain_full_pixels = pixels_written;
+        }
+      }
+    }
+  }
+  app.reset();
 }
 }  // namespace
