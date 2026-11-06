@@ -128,6 +128,41 @@ class ValueColoredGauge : public ModernRadialGauge {
   }
 };
 
+// Changes either arc's color independently, including transitions to no ink.
+class ThresholdGauge : public ModernRadialGauge {
+ public:
+  ThresholdGauge(ApplicationContext& context, Color scale_low, Color scale_high,
+                 Color value_low, Color value_high)
+      : ModernRadialGauge(context),
+        scale_low_(scale_low),
+        scale_high_(scale_high),
+        value_low_(value_low),
+        value_high_(value_high) {}
+
+  Color getScaleColor() const override {
+    return value() < 0.5f ? scale_low_ : scale_high_;
+  }
+
+  Color getValueColor() const override {
+    return value() < 0.5f ? value_low_ : value_high_;
+  }
+
+  void setColors(Color scale_low, Color scale_high, Color value_low,
+                 Color value_high) {
+    scale_low_ = scale_low;
+    scale_high_ = scale_high;
+    value_low_ = value_low;
+    value_high_ = value_high;
+    invalidate();
+  }
+
+ private:
+  Color scale_low_;
+  Color scale_high_;
+  Color value_low_;
+  Color value_high_;
+};
+
 class ModernGaugeTest : public testing::Test {
  protected:
   ModernGaugeTest()
@@ -399,27 +434,190 @@ TEST_F(ModernGaugeTest, AlphaCompositionAndWiderValueStroke) {
   EXPECT_EQ(wide, snapshot());
 }
 
-// Verifies value changes keep the dirty/invalidated distinction, coalesce
-// several assignments against the last painted value, and touch only a small
-// endpoint area while preserving alpha and patterned backdrop composition.
-TEST_F(ModernGaugeTest, SmallDirtyUpdatesPreserveUnchangedPixels) {
+// Verifies small, coalesced value updates invalidate only a small endpoint
+// region before paint, for growth/shrinkage, either sweep direction and stroke
+// width, with correct alpha composition and no follow-up refresh.
+TEST_F(ModernGaugeTest, SmallValueUpdatesInvalidateOnlyEndpointRegion) {
   auto gauge = std::make_unique<ModernRadialGauge>(app_->context(), 0.4f);
   gauge->setCustomColors(Color(128, 0, 0, 255), Color(160, 255, 0, 0));
   gauge->setAngles(0, kTurn);
   install(std::move(gauge), false, true);
-  render();
-  for (float next : {0.41f, 0.39f, 0.42f}) {
-    gauge_->setValue(next + 0.1f);
-    gauge_->setValue(next);
-    EXPECT_TRUE(gauge_->isDirty());
-    EXPECT_FALSE(gauge_->isInvalidated());
+  for (float sweep : {kTurn, -kTurn}) {
+    for (float width : {4.0f, 12.5f}) {
+      SCOPED_TRACE(sweep);
+      SCOPED_TRACE(width);
+      gauge_->setAngles(0, sweep);
+      gauge_->setValueWidth(width);
+      gauge_->setValue(0.4f);
+      render();
+      for (float next : {0.41f, 0.39f, 0.42f}) {
+        gauge_->setValue(next + 0.005f);
+        gauge_->setValue(next);
+        EXPECT_TRUE(gauge_->isInvalidated());
+        EXPECT_TRUE(page_->isInvalidated());
+        render();
+        const int written =
+            std::count(device_.writes.begin(), device_.writes.end(), 1);
+        EXPECT_GT(written, 0);
+        // A 100x100 gauge must not repaint its whole area or filled prefix.
+        EXPECT_LT(written, 500);
+        EXPECT_EQ(device_.writes[65 * 160 + 60], 0);
+        for (int y = 0; y < 128; ++y) {
+          for (int x = 0; x < 160; ++x) {
+            if (!gauge_->maxParentBounds().contains(x, y)) {
+              EXPECT_EQ(device_.writes[y * 160 + x], 0);
+            }
+          }
+        }
+        const auto incremental = snapshot();
+        render();
+        EXPECT_EQ(device_.addresses, 0);
+        render(true);
+        EXPECT_EQ(incremental, snapshot());
+        gauge_->setValue(next);
+        render();
+        EXPECT_EQ(device_.addresses, 0);
+      }
+    }
+  }
+}
+
+// Verifies changed-interval bounds cover round caps, cardinal crossings and the
+// full-circle seam, including offset starts and clockwise partial/full sweeps.
+TEST_F(ModernGaugeTest, ValueDamageCoversEndpointsAndWraparound) {
+  auto gauge = std::make_unique<ModernRadialGauge>(app_->context());
+  gauge->setCustomColors(Color(128, 0, 0, 255), Color(160, 255, 0, 0));
+  gauge->setValueWidth(12.5f);
+  install(std::move(gauge), false, true);
+  for (float start : {0.0f, 5.8f}) {
+    for (float sweep : {kTurn, -kTurn, -kPi}) {
+      SCOPED_TRACE(start);
+      SCOPED_TRACE(sweep);
+      ASSERT_TRUE(gauge_->setAngles(start, start + sweep));
+      gauge_->setValue(0);
+      render();
+      for (float value :
+           {0.001f, 0.249f, 0.251f, 0.499f, 0.501f, 0.749f, 0.751f, 0.999f,
+            1.0f, 0.999f, 0.751f, 0.499f, 0.001f, 0.0f}) {
+        SCOPED_TRACE(value);
+        const float delta = std::fabs(value - gauge_->value());
+        gauge_->setValue(value);
+        render();
+        if (delta < 0.01f) {
+          EXPECT_LT(std::count(device_.writes.begin(), device_.writes.end(), 1),
+                    500);
+        }
+        const auto incremental = snapshot();
+        render(true);
+        EXPECT_EQ(incremental, snapshot());
+      }
+    }
+  }
+}
+
+// Verifies value-dependent color changes repaint the existing filled prefix
+// or scale, including alpha changes, without repainting an unaffected suffix.
+TEST_F(ModernGaugeTest, ValueDamageIncludesColorChanges) {
+  const Color blue(128, 0, 0, 255);
+  const Color red(160, 255, 0, 0);
+  const Color green(192, 0, 255, 0);
+  const Color transparent = roo_display::color::Transparent;
+  struct Colors {
+    Color scale_low;
+    Color scale_high;
+    Color value_low;
+    Color value_high;
+  };
+  auto gauge =
+      std::make_unique<ThresholdGauge>(app_->context(), blue, blue, red, green);
+  ThresholdGauge* dynamic = gauge.get();
+  gauge->setAngles(0, kTurn);
+  install(std::move(gauge), false, true);
+  for (const Colors& colors :
+       {Colors{blue, blue, red, green}, Colors{blue, green, red, red},
+        Colors{blue, blue, transparent, green},
+        Colors{blue, blue, red, transparent}}) {
+    dynamic->setColors(colors.scale_low, colors.scale_high, colors.value_low,
+                       colors.value_high);
+    gauge_->setValue(0.49f);
     render();
-    int written = std::count(device_.writes.begin(), device_.writes.end(), 1);
-    EXPECT_GT(written, 0);
-    EXPECT_LT(written, 500);
-    auto incremental = snapshot();
+    for (float value : {0.51f, 0.48f}) {
+      gauge_->setValue(value);
+      render();
+      // The lower quadrant belongs only to the scale at these values.
+      EXPECT_EQ(device_.writes[109 * 160 + 60],
+                colors.scale_low != colors.scale_high);
+      const auto incremental = snapshot();
+      render(true);
+      EXPECT_EQ(incremental, snapshot());
+    }
+  }
+}
+
+// Verifies a large transparent prefix does not enlarge damage for a much
+// smaller visible prefix, and invisible value updates do no work.
+TEST_F(ModernGaugeTest, ValueDamageOmitsInvisibleInk) {
+  const Color blue(128, 0, 0, 255);
+  auto gauge = std::make_unique<ThresholdGauge>(
+      app_->context(), blue, blue, Color(160, 255, 0, 0),
+      roo_display::color::Transparent);
+  gauge->setAngles(0, kTurn);
+  gauge->setValue(0.9f);
+  install(std::move(gauge), false, true);
+  render();
+  for (float value : {0.1f, 0.9f}) {
+    gauge_->setValue(value);
+    render();
+    EXPECT_GT(device_.addresses, 0);
+    EXPECT_LT(std::count(device_.writes.begin(), device_.writes.end(), 1),
+              1500);
+    const auto incremental = snapshot();
     render(true);
     EXPECT_EQ(incremental, snapshot());
+  }
+  gauge_->setValue(0.8f);
+  render();
+  EXPECT_EQ(device_.addresses, 0);
+  gauge_->setValueWidth(0);
+  render();
+  gauge_->setValue(0.1f);
+  render();
+  EXPECT_EQ(device_.addresses, 0);
+  EXPECT_FLOAT_EQ(gauge_->value(), 0.1f);
+}
+
+// Verifies both public invalidation overloads reconstruct unchanged translucent
+// arcs and transparent holes, rather than merely preserving the previous frame.
+TEST_F(ModernGaugeTest, SourceOnlyInvalidationReconstructsUnchangedValues) {
+  auto gauge = std::make_unique<ModernRadialGauge>(app_->context(), 0.6f);
+  gauge->setCustomColors(Color(128, 0, 0, 255), Color(160, 255, 0, 0));
+  gauge->setAngles(0, kTurn);
+  install(std::move(gauge), false, true);
+  render();
+  const auto expected = snapshot();
+  Widget* source = gauge_;
+  for (bool full : {false, true}) {
+    const Rect local =
+        full ? gauge_->getInteriorBounds() : Rect(80, 40, 99, 59);
+    const Rect damaged =
+        local.translate(gauge_->offsetLeft(), gauge_->offsetTop());
+    device_.fillRect(damaged.xMin(), damaged.yMin(), damaged.xMax(),
+                     damaged.yMax(), roo_display::color::Magenta);
+    if (full) {
+      source->invalidateInterior();
+    } else {
+      source->invalidateInterior(local);
+    }
+    EXPECT_TRUE(page_->isInvalidated());
+    render();
+    EXPECT_EQ(snapshot(), expected);
+    for (int y = 0; y < 128; ++y) {
+      for (int x = 0; x < 160; ++x) {
+        EXPECT_EQ(device_.writes[y * 160 + x], damaged.contains(x, y));
+      }
+    }
+    render();
+    EXPECT_EQ(std::count(device_.writes.begin(), device_.writes.end(), 1), 0);
   }
 }
 

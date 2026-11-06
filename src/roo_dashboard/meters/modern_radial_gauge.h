@@ -29,7 +29,9 @@ class ModernRadialGauge : public roo_windows::Widget {
                              Style style = Style::kPrimaryContainer);
 
   /// Sets a normalized value, clamping finite inputs to [0, 1]. Returns false
-  /// for nonfinite inputs without changing the current value.
+  /// for nonfinite inputs without changing the current value. Invalidates the
+  /// changed arc interval and its backdrop, including caps and antialiasing;
+  /// value-dependent color changes also invalidate the affected arc or scale.
   bool setValue(float value);
 
   /// Returns the normalized value; zero hides the value arc completely.
@@ -69,27 +71,29 @@ class ModernRadialGauge : public roo_windows::Widget {
   /// kCustom uses a light-gray scale and a black value arc.
   void setCustomColors(roo_display::Color scale, roo_display::Color value);
 
-  /// Resolves the scale color on every paint. Overrides may depend on value()
-  /// or application state; call invalidate() after changing external state.
+  /// Resolves the scale color for painting and value-change damage. Overrides
+  /// may depend on value() or application state; call invalidate() after
+  /// changing external state.
   virtual roo_display::Color getScaleColor() const;
 
-  /// Resolves the value color on every paint. Overrides may depend on value()
-  /// or application state; call invalidate() after changing external state.
+  /// Resolves the value color for painting and value-change damage. Overrides
+  /// may depend on value() or application state; call invalidate() after
+  /// changing external state.
   virtual roo_display::Color getValueColor() const;
 
   /// Repaints the gauge and its ancestor backdrop after external color changes.
   void invalidate();
 
+  /// Invalidates the full gauge and the scene visible through its arcs.
+  void invalidateInterior() override;
+
+  /// Invalidates a local region and its backdrop, even with unchanged values.
+  void invalidateInterior(const roo_windows::Rect& rect) override;
+
   /// Returns a nominal 96 dp square; the widget also fits rectangular layouts.
   roo_windows::Dimensions getSuggestedMinimumDimensions() const override;
 
-  /// Requests repaint only where the last painted value or colors changed.
-  /// Full invalidations are reconstructed by the ordinary ancestor pipeline.
-  void paint(roo_windows::PaintContext& ctx) const override;
-
  protected:
-  void paintWidgetContents(roo_windows::PaintContext& ctx) override;
-
   // Keep overlays available when a lower contributor repaints behind us.
   void emitPersistentDecoration(roo_windows::PaintContext& ctx) const override;
 
@@ -99,10 +103,6 @@ class ModernRadialGauge : public roo_windows::Widget {
 
  private:
   float value_ = 0;
-  float painted_value_ = 0;
-  roo_display::Color painted_scale_color_ = roo_display::color::Transparent;
-  roo_display::Color painted_value_color_ = roo_display::color::Transparent;
-  bool painted_ = false;
   float start_angle_ = -1.5707963267948966f;
   float end_angle_ = 1.5707963267948966f;
   roo_windows::SmallNumber scale_width_ = 8;

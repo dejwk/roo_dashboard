@@ -74,6 +74,7 @@ roo_windows::Rect UnionInk(const roo_windows::Rect& a,
   return a.empty() ? roo_windows::Rect(b)
                    : roo_windows::Rect::Extent(a, roo_windows::Rect(b));
 }
+
 }  // namespace
 
 ModernRadialGauge::ModernRadialGauge(roo_windows::ApplicationContext& context,
@@ -86,8 +87,47 @@ bool ModernRadialGauge::setValue(float value) {
   if (!std::isfinite(value)) return false;
   value = std::max(0.0f, std::min(1.0f, value));
   if (value_ == value) return true;
+
+  const float previous_value = value_;
+  const roo_display::Color previous_scale_color = getScaleColor();
+  const roo_display::Color previous_value_color = getValueColor();
   value_ = value;
-  setDirty();
+
+  const float sweep = end_angle_ - start_angle_;
+  if (bounds().empty() || sweep == 0) return true;
+  const float scale_width =
+      roo_windows::Scaled(static_cast<float>(scale_width_));
+  const float value_width =
+      roo_windows::Scaled(static_cast<float>(value_width_));
+  const ArcGeometry geometry = FitArc(width(), height(), start_angle_, sweep,
+                                      std::max(scale_width, value_width));
+  if (geometry.radius <= 0) return true;
+
+  const roo_display::Color scale_color = getScaleColor();
+  const roo_display::Color value_color = getValueColor();
+  roo_windows::Rect damage(0, 0, -1, -1);
+  if (previous_scale_color != scale_color &&
+      (previous_scale_color.a() != 0 || scale_color.a() != 0)) {
+    damage = UnionInk(damage, ArcShape(geometry, start_angle_, sweep,
+                                       scale_width, roo_display::color::White)
+                                  .extents());
+  }
+  if (previous_value_color.a() != 0 || value_color.a() != 0) {
+    // A color change affects the visible prefix; otherwise only the interval
+    // between endpoints can change. Arc extents include round caps and AA.
+    const float first = previous_value_color == value_color
+                            ? std::min(previous_value, value_)
+                            : 0;
+    const float last =
+        std::max(previous_value_color.a() != 0 ? previous_value : 0,
+                 value_color.a() != 0 ? value_ : 0);
+    damage = UnionInk(damage, ArcShape(geometry, start_angle_ + sweep * first,
+                                       sweep * (last - first), value_width,
+                                       roo_display::color::White)
+                                  .extents());
+  }
+  damage = roo_windows::Rect::Intersect(damage, bounds());
+  if (!damage.empty()) invalidateInterior(damage);
   return true;
 }
 
@@ -170,59 +210,20 @@ roo_display::Color ModernRadialGauge::getValueColor() const {
   return custom_value_color_;
 }
 
-void ModernRadialGauge::invalidate() {
-  invalidateInterior();
-  notifyParentInvalidatedRegion(parent_bounds());
+void ModernRadialGauge::invalidate() { invalidateInterior(); }
+
+void ModernRadialGauge::invalidateInterior() {
+  invalidateInterior(getInteriorBounds());
+}
+
+void ModernRadialGauge::invalidateInterior(const roo_windows::Rect& rect) {
+  Widget::invalidateInterior(rect);
+  notifyParentInvalidatedRegion(rect.translate(offsetLeft(), offsetTop()));
 }
 
 roo_windows::Dimensions ModernRadialGauge::getSuggestedMinimumDimensions()
     const {
   return {roo_windows::Scaled(96), roo_windows::Scaled(96)};
-}
-
-void ModernRadialGauge::paintWidgetContents(roo_windows::PaintContext& ctx) {
-  if (!isDirty()) return;
-  Widget::paintWidgetContents(ctx);
-  painted_value_ = value_;
-  painted_scale_color_ = getScaleColor();
-  painted_value_color_ = getValueColor();
-  painted_ = true;
-}
-
-void ModernRadialGauge::paint(roo_windows::PaintContext& ctx) const {
-  if (!painted_) return;
-  const float sweep = end_angle_ - start_angle_;
-  const float scale_width =
-      roo_windows::Scaled(static_cast<float>(scale_width_));
-  const float value_width =
-      roo_windows::Scaled(static_cast<float>(value_width_));
-  if (bounds().empty() || sweep == 0) return;
-  ArcGeometry geometry = FitArc(width(), height(), start_angle_, sweep,
-                                std::max(scale_width, value_width));
-  if (geometry.radius <= 0) return;
-  roo_windows::Rect damage(0, 0, -1, -1);
-  if (painted_scale_color_ != getScaleColor()) {
-    damage = UnionInk(damage, ArcShape(geometry, start_angle_, sweep,
-                                       scale_width, roo_display::color::White)
-                                  .extents());
-  }
-  if (painted_value_color_ != getValueColor()) {
-    // A value-dependent color can change the complete filled prefix.
-    damage = UnionInk(damage, ArcShape(geometry, start_angle_,
-                                       sweep * std::max(value_, painted_value_),
-                                       value_width, roo_display::color::White)
-                                  .extents());
-  } else if (value_ != painted_value_) {
-    // Only the interval between the old and new endpoints (including round
-    // caps and antialiasing) can differ, for either growth or shrinkage.
-    const float first = std::min(value_, painted_value_);
-    const float last = std::max(value_, painted_value_);
-    damage = UnionInk(damage, ArcShape(geometry, start_angle_ + sweep * first,
-                                       sweep * (last - first), value_width,
-                                       roo_display::color::White)
-                                  .extents());
-  }
-  if (!damage.empty()) ctx.repaintBackdrop(*this, damage);
 }
 
 void ModernRadialGauge::emitPersistentDecoration(
