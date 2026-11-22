@@ -2,7 +2,9 @@
 
 #include <cmath>
 
+#include "roo_display.h"
 #include "roo_display/color/color.h"
+#include "roo_io.h"
 #include "roo_io/text/string_printf.h"
 #include "roo_fonts/NotoSans_Regular/12.h"
 #include "roo_fonts/NotoSans_Regular/18.h"

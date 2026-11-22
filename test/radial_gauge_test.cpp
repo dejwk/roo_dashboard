@@ -7,9 +7,12 @@
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "roo_display.h"
 #include "roo_display/core/offscreen.h"
 #include "roo_display/ui/text_label.h"
+#include "roo_fonts_basic.h"
 #include "roo_fonts/NotoSans_Condensed/15.h"
+#include "roo_windows.h"
 #include "roo_windows/containers/static_layout.h"
 #include "roo_windows/core/application.h"
 

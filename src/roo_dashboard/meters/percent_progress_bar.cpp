@@ -2,9 +2,11 @@
 
 #include <cmath>
 
+#include "roo_display.h"
 #include "roo_display/color/color.h"
 #include "roo_display/core/rasterizable.h"
 #include "roo_display/filter/background.h"
+#include "roo_windows.h"
 #include "roo_windows/core/theme.h"
 #include "roo_windows/material2/typography.h"
 #include "roo_fonts/NotoSans_Regular/12.h"

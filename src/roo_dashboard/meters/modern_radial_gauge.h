@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "roo_windows.h"
 #include "roo_windows/core/number.h"
 #include "roo_windows/core/widget.h"
 

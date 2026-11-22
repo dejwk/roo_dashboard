@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 
+#include "roo_windows.h"
 #include "roo_windows/containers/vertical_layout.h"
 #include "roo_windows/core/canvas.h"
 #include "roo_windows/core/panel.h"

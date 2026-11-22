@@ -2,6 +2,7 @@
 
 #include "roo_dashboard/meters/resources/thermometer_246x80_bar.h"
 #include "roo_dashboard/meters/resources/thermometer_246x80_bounds.h"
+#include "roo_display.h"
 #include "roo_display/color/color.h"
 #include "roo_display/shape/basic.h"
 #include "roo_display/ui/string_printer.h"

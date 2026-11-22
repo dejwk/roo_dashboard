@@ -8,8 +8,11 @@
 #include "roo_display/shape/basic.h"
 #include "roo_display/shape/smooth.h"
 #include "roo_display/ui/text_label.h"
+#include "roo_fonts_basic.h"
 #include "roo_fonts/NotoSans_Condensed/15.h"
+#include "roo_io.h"
 #include "roo_io/text/string_printf.h"
+#include "roo_windows.h"
 #include "roo_windows/core/widget.h"
 
 namespace roo_dashboard {

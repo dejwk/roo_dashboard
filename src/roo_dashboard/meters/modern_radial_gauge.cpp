@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <cmath>
 
+#include "roo_display.h"
 #include "roo_display/shape/smooth.h"
+#include "roo_windows.h"
 #include "roo_windows/core/theme.h"
 
 namespace roo_dashboard {
