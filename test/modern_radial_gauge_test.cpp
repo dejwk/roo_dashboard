@@ -349,6 +349,32 @@ TEST_F(ModernGaugeTest, ArcPositionsAndSignedSweeps) {
   EXPECT_GT(count(roo_display::color::Blue), 0);
 }
 
+// Verifies a closed translucent arc has identical coverage for different
+// start angles and directions, including at the seam.
+TEST_F(ModernGaugeTest, FullValueHasNoSeam) {
+  auto gauge = std::make_unique<ModernRadialGauge>(app_->context(), 1.0f);
+  gauge->setCustomColors(roo_display::color::Transparent,
+                         Color(160, 255, 0, 0));
+  gauge->setValueWidth(12.5f);
+  ASSERT_TRUE(gauge->setAngles(0, kTurn));
+  install(std::move(gauge));
+  render();
+  const std::vector<Color> closed = snapshot();
+  for (float start : {0.3f, 5.8f}) {
+    for (float sweep : {kTurn, -kTurn}) {
+      SCOPED_TRACE(start);
+      SCOPED_TRACE(sweep);
+      ASSERT_TRUE(gauge_->setAngles(start, start + sweep));
+      render();
+      const std::vector<Color> rotated = snapshot();
+      const auto mismatch =
+          std::mismatch(closed.begin(), closed.end(), rotated.begin());
+      EXPECT_TRUE(mismatch.first == closed.end())
+          << "First differing pixel index: " << mismatch.first - closed.begin();
+    }
+  }
+}
+
 // Verifies the default semicircle is oriented right, with a bottom start and
 // top end; bounds remain empty outside the actual arc and its round caps.
 TEST_F(ModernGaugeTest, DefaultSemicircleAndRoundCaps) {

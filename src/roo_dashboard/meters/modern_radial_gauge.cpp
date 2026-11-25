@@ -58,15 +58,39 @@ roo_display::SmoothShape ArcShape(const ArcGeometry& geometry, float start,
   if (width <= 0 || sweep == 0) return {};
   float native_start = kPi * 0.5f - (sweep > 0 ? start + sweep : start);
   native_start = std::remainder(native_start, kTurn);
-  return roo_display::SmoothThickArc(
-      geometry.center, geometry.radius, width, native_start,
-      native_start + std::fabs(sweep), color, roo_display::ENDING_ROUNDED);
+  float native_end = native_start + std::fabs(sweep);
+  // Rounding the endpoint must not switch a nearly closed arc to the circle
+  // rasterizer, which rounds edge coverage differently along the entire ring.
+  while (native_end - native_start >= kTurn) {
+    native_end = std::nextafter(native_end, native_start);
+  }
+  return roo_display::SmoothThickArc(geometry.center, geometry.radius, width,
+                                     native_start, native_end, color,
+                                     roo_display::ENDING_ROUNDED);
 }
 
+// Registers an arc over the backdrop, keeping edge coverage stable as it
+// closes.
 void AddArc(roo_windows::PaintContext& ctx, const ArcGeometry& geometry,
             float start, float sweep, float width, roo_display::Color color) {
   if (width <= 0 || sweep == 0 || color.a() == 0) return;
-  ctx.addOverlayShape(ArcShape(geometry, start, sweep, width, color));
+  // Subtracting two float angles can round an intended turn down by one ULP.
+  if (std::fabs(sweep) < std::nextafter(kTurn, 0.0f)) {
+    ctx.addOverlayShape(ArcShape(geometry, start, sweep, width, color));
+    return;
+  }
+
+  // Use two 270-degree arcs and clip out their caps. The clips partition the
+  // ring, so each pixel gets the same arc edge coverage and one alpha blend.
+  const roo_windows::Rect clip = ctx.localClip();
+  const int16_t split = std::ceil(geometry.center.y);
+  constexpr float kHalfSweep = 3 * kPi / 2;
+  ctx.addOverlayShape(
+      ArcShape(geometry, -kPi / 4, kHalfSweep, width, color),
+      roo_windows::Rect(clip.xMin(), clip.yMin(), clip.xMax(), split - 1));
+  ctx.addOverlayShape(
+      ArcShape(geometry, 3 * kPi / 4, kHalfSweep, width, color),
+      roo_windows::Rect(clip.xMin(), split, clip.xMax(), clip.yMax()));
 }
 
 // Unions nonempty ink bounds without letting an empty origin enlarge damage.

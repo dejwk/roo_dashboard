@@ -1,3 +1,13 @@
+# roo_dashboard 1.1.0
+
+- Add `ModernRadialGauge` with rounded scale and value arcs, configurable sweep angles and stroke widths, Material 3 or custom colors, and a transparent center for composing labels. Value changes repaint only the affected area.
+- Fix `RadialGauge` background painting and eliminate needle trails during updates. Add rendering regression tests for both gauges.
+- Fix Arduino dependency discovery by adding top-level includes for libraries used through nested headers.
+- Raise the minimum `roo_windows` version to 1.11.1 and migrate widgets to the updated theme and font APIs.
+- Update `roo_testing` to 2.7.1 for local Bazel builds and 2.7.0 for CI. Add host profile configurations for Arduino, ESP-IDF, and Pico SDK, plus a runner for the nine-profile test matrix.
+
+---
+
 # roo_dashboard 1.0.2
 
 - **Breaking API change:** Widget constructors now accept `roo_windows::ApplicationContext&`; pass `app.context()` when creating widgets.
